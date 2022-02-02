@@ -2,29 +2,43 @@ module Tests
 
 open System
 open FsUnit
+open VarJsonParser
 open Xunit
 open Xunit.Abstractions
-open FSharp.Data
 
-type Tests(output:ITestOutputHelper) =
+type``VarJsonParser should``(output:ITestOutputHelper) =
 
-
-    let write result =
-        output.WriteLine (sprintf "The actual result was %O" result)
-    let rec Parse  (value :JsonValue) (key :string) (acc) = 
-        let newKey x =  (key + "_" + x) 
-        match value with
-        | JsonValue.String s -> (key, s) :: acc
-        | JsonValue.Boolean b -> (key, b |> string ) :: acc
-        | JsonValue.Record r -> r |> Array.map(fun (x,y) ->  Parse y  (newKey x) acc ) |> List.concat
-        | JsonValue.Array a ->  a |> Array.mapi(fun i e -> Parse e (newKey (i |> string)) acc ) |> List.concat
-        | _ -> (key, "error") :: acc
-
+    let write result = output.WriteLine
+    let readfile = System.IO.File.ReadAllText
+    let equalto = equal
 
     [<Fact>]
-    let ``My test`` () =
-        let json = System.IO.File.ReadAllText "config_sample.json"
-        let data = JsonValue.Parse(json)
-        let result = Parse data "PREFIX" List.empty
-        result |> should be (equal [("PREFIX_key1", "value1"); ("PREFIX_key2", "value2"); ("PREFIX_key3", "false"); ("PREFIX_array_0_keyinside", "BOOM")])
-   
+    let ``Transform Json Config Into Environnement Variable`` () =
+        "config_sample.json" 
+        |> readfile
+        |> Parse "PREFIX" 
+        |> should be (equalto [
+        ("PREFIX_key1", "value1"); 
+        ("PREFIX_key2", "value2"); 
+        ("PREFIX_key3", "False"); 
+        ("PREFIX_key4", "2012-04-23T18:25:43.511Z");
+        ("PREFIX_key5", "");
+        ("PREFIX_key6", "5");
+        ("PREFIX_key7", "1.33");
+        ("PREFIX_array_0_keyinside", "BOOM")
+        ])
+
+    [<Fact>]
+    let ``Display Environnement Variable`` () =
+        "config_sample.json" 
+                |> readfile
+                |> Parse "PREFIX"
+                |> Print
+                |> should equalto "PREFIX_key1=value1\n\
+                                   PREFIX_key2=value2\n\
+                                   PREFIX_key3=False\n\
+                                   PREFIX_key4=2012-04-23T18:25:43.511Z\n\
+                                   PREFIX_key5=\n\
+                                   PREFIX_key6=5\n\
+                                   PREFIX_key7=1.33\n\
+                                   PREFIX_array_0_keyinside=BOOM\n"

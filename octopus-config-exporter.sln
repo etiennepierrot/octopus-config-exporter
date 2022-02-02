@@ -1,22 +1,31 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30114.105
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Octopus.Config.Exporter.Cli.Test", "test\Octopus.Config.Exporter.Cli.Test.fsproj", "{595A09F4-7A06-4E9E-833E-59FD741C441C}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Octopus.Config.Exporter.Cli.Test", "test\Octopus.Config.Exporter.Cli.Test.fsproj", "{595A09F4-7A06-4E9E-833E-59FD741C441C}"
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Octopus.Config.Exporter.Cli", "src\Octopus.Config.Exporter.Cli.fsproj", "{8B216A8F-1FA7-4AFF-A6E8-1EA24F23F0D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{595A09F4-7A06-4E9E-833E-59FD741C441C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{595A09F4-7A06-4E9E-833E-59FD741C441C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{595A09F4-7A06-4E9E-833E-59FD741C441C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{595A09F4-7A06-4E9E-833E-59FD741C441C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B216A8F-1FA7-4AFF-A6E8-1EA24F23F0D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B216A8F-1FA7-4AFF-A6E8-1EA24F23F0D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B216A8F-1FA7-4AFF-A6E8-1EA24F23F0D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B216A8F-1FA7-4AFF-A6E8-1EA24F23F0D2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B81CC891-23B5-4A06-823A-DFE4DBD64C6B}
 	EndGlobalSection
 EndGlobal
