@@ -13,7 +13,7 @@ type``VarJsonParser should``(output:ITestOutputHelper) =
     let equalto = equal
 
     [<Fact>]
-    let ``Transform Json Config Into Environnement Variable`` () =
+    let ``Transform json config into environnement variable`` () =
         "config_sample.json" 
         |> readfile
         |> Parse "PREFIX" 
@@ -28,8 +28,25 @@ type``VarJsonParser should``(output:ITestOutputHelper) =
         ("PREFIX_array_0_keyinside", "BOOM")
         ])
 
+    
     [<Fact>]
-    let ``Display Environnement Variable`` () =
+    let ``Transform json config into environnement variable without prefix`` () =
+        "config_sample.json" 
+        |> readfile
+        |> Parse "" 
+        |> should be (equalto [
+        ("key1", "value1"); 
+        ("key2", "value2"); 
+        ("key3", "False"); 
+        ("key4", "2012-04-23T18:25:43.511Z");
+        ("key5", "");
+        ("key6", "5");
+        ("key7", "1.33");
+        ("array_0_keyinside", "BOOM")
+        ])
+
+    [<Fact>]
+    let ``Display environnement variable`` () =
         "config_sample.json" 
                 |> readfile
                 |> Parse "PREFIX"
