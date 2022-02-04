@@ -1,0 +1,3 @@
+[octopus]
+	serverUrl = https://etienne.octopus.app/
+	projectName = test
