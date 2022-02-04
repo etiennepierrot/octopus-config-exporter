@@ -1,7 +1,9 @@
 module Tests
 
-open System
+open DotNetConfig
 open FsUnit
+open Octopus
+open OctocusConnector
 open VarJsonParser
 open Xunit
 open Xunit.Abstractions
@@ -12,6 +14,22 @@ type``VarJsonParser should``(output:ITestOutputHelper) =
     let readfile = System.IO.File.ReadAllText
     let equalto = equal
 
+    let repo =
+        let config = Config.Build();
+        let serverUrl = config.GetString("octopus", "serverUrl")
+        let apiKey = config.GetString("octopus", "apiKey")
+        Client.OctopusServerEndpoint(serverUrl, apiKey) 
+               |> Client.OctopusRepository
+
+        
+    [<Fact>]
+    let ``Can modify octopus variable`` () =
+        UpdateProjectEnvironnmentVariable "test" repo  [("fizz", "buzz"); ("fizz2", "newbuzz2")]|> ignore
+        let (_, value) = GetProjectEnvironnmentVariables "test" repo
+                            |> Seq.find(fun (key, _) -> key = "fizz")
+        value
+        |> should be (equalto "buzz")
+        
     [<Fact>]
     let ``Transform json config into environnement variable`` () =
         "config_sample.json" 
@@ -27,7 +45,6 @@ type``VarJsonParser should``(output:ITestOutputHelper) =
         ("PREFIX_key7", "1.33");
         ("PREFIX_array_0_keyinside", "BOOM")
         ])
-
     
     [<Fact>]
     let ``Transform json config into environnement variable without prefix`` () =
