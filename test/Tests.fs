@@ -7,6 +7,7 @@ open OctocusConnector
 open VarJsonParser
 open Xunit
 open Xunit.Abstractions
+open System
 
 type``VarJsonParser should``(output:ITestOutputHelper) =
 
@@ -17,7 +18,8 @@ type``VarJsonParser should``(output:ITestOutputHelper) =
     let repo =
         let config = Config.Build();
         let serverUrl = config.GetString("octopus", "serverUrl")
-        let apiKey = config.GetString("octopus", "apiKey")
+        let apiKey = Environment.GetEnvironmentVariable  "OCTOPUS_APIKEY"
+        //let apiKey  = config.GetString("octopus", "apiKey")
         Client.OctopusServerEndpoint(serverUrl, apiKey) 
                |> Client.OctopusRepository
 
