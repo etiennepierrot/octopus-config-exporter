@@ -1,24 +1,21 @@
 ﻿module OctocusConnector
-open Octopus
 
+type OctopusVariable = { Value :string; Scope :Option<string> }
 
-let UpdateProjectEnvironnmentVariable  projectName (environnmentVariables : Map<string, string>) getVariableSet updateVariableSet =
-    let set (key, value) (variableSet :Client.Model.VariableSetResource )= 
-        variableSet.AddOrUpdateVariableValue(key, value)  |> ignore
-    let variableSet = getVariableSet projectName
-    environnmentVariables |> Seq.iter (fun ev -> set (ev.Key, ev.Value) variableSet)
-    updateVariableSet variableSet
+let UpdateProjectEnvironnmentVariable  projectName (environnmentVariables : Map<string, string>) updateVariableSet =
+    environnmentVariables 
+    |> Map.map (fun _ v -> [{Value = v; Scope = None}] )
+    |> updateVariableSet projectName
 
 
 //let Plan projectName (environnmentVariables : (string * string)) getVariableSet =
 //    let octopusEnvVar = GetProjectEnvironnmentVariables projectName getVariableSet
 
 
-
-let GetProjectEnvironnmentVariables projectName (getVariableSet : string ->  Client.Model.VariableSetResource) =
+let GetProjectEnvironnmentVariables projectName (getVariableSet : string ->  Map<string, OctopusVariable list>) =
     let variableSet = getVariableSet projectName
-    variableSet.Variables 
+    variableSet 
     |> Seq.toList 
-    |> Seq.map( fun var -> (var.Name, var.Value))
+    |> Seq.map( fun var -> (var.Key, var.Value))
 
     

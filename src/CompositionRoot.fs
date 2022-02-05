@@ -36,8 +36,20 @@ let Export =
 
     let repo = GetOctopusRepository octopusServer apiKey
 
-    let GetVariableSet = repo.Projects.FindByName >> (fun p -> repo.VariableSets.Get(p.VariableSetId) ) 
-    let UpdateVariableSet = (fun (v) -> repo.VariableSets.Modify v) >> ignore
+    let getVariableSet = repo.Projects.FindByName >> (fun p -> repo.VariableSets.Get(p.VariableSetId) ) 
+
+    let GetVariableSet = 
+        let convertToMap ( varset :Client.Model.VariableSetResource) = 
+            varset.Variables 
+            |> Seq.map( fun var -> var.Name,  [{ Value = var.Value; Scope  = None }])
+        getVariableSet >> convertToMap
+    
+    let UpdateVariableSet projectName  (environnmentVariables:Map<string, OctopusVariable list>)  =
+        let variableSet = getVariableSet projectName
+        let convertToVariableSet (environnmentVariables:Map<string, OctopusVariable list>) = 
+            environnmentVariables |> Seq.iter(fun env -> variableSet.AddOrUpdateVariableValue(env.Key, env.Value.Head.Value) |> ignore)
+            variableSet
+        environnmentVariables |> convertToVariableSet |> repo.VariableSets.Modify |> ignore
     
     let environnmentVariables = pathConfigFile |> readfile |> Parse prefix 
-    UpdateProjectEnvironnmentVariable projectName environnmentVariables GetVariableSet UpdateVariableSet  |> ignore
+    UpdateProjectEnvironnmentVariable projectName environnmentVariables UpdateVariableSet  |> ignore

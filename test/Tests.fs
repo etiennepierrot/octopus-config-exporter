@@ -12,21 +12,24 @@ type``VarJsonParser should``(output:ITestOutputHelper) =
     let readfile = System.IO.File.ReadAllText
     let equalto = equal
 
-    let GetVariableSet projectName = 
-        let p = Client.Model.VariableSetResource()
-        p.AddOrUpdateVariableValue("fizz", "buzz")  
-        p
+    let mutable MockOctopusVariables = Map[
+                                        "fizz", [{ Value = "buzz"; Scope  = None }];  
+                                        "fizz2", [{ Value = "newbuzz2"; Scope  = None }];
+                                       ]
 
-    let UpdateVariableSet = (id) >> ignore
+    let GetVariableSet projectName = MockOctopusVariables 
+    let UpdateVariableSet projectName (environnmentVariables : Map<string, OctopusVariable list>) = 
+        let update key value = MockOctopusVariables <- (MockOctopusVariables |> Map.change key  (fun _ -> Some value) )    
+        environnmentVariables |> Map.iter update
         
     [<Fact>]
     let ``Can modify octopus variable`` () =
-        UpdateProjectEnvironnmentVariable "test" (["fizz", "buzz";  
-                                                   "fizz2", "newbuzz2";] |> Map.ofList) |> UpdateVariableSet
+        let environnmentVariables = Map ["fizz", "buzz";  "fizz2", "newbuzz2";]
+        UpdateProjectEnvironnmentVariable "test" environnmentVariables UpdateVariableSet
         let (_, value) = GetProjectEnvironnmentVariables "test" GetVariableSet
                             |> Seq.find(fun (key, _) -> key = "fizz")
         value
-        |> should be (equalto "buzz")
+        |> should be (equalto [{ Value = "buzz"; Scope = None }])
         
     [<Fact>]
     let ``Transform json config into environnement variable`` () =
