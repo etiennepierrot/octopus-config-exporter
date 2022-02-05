@@ -17,5 +17,6 @@ let Export =
     
     let readfile = System.IO.File.ReadAllText
     let updateOctopusVariables = OctopusConnector.UpdateVariableSet octopusServer apiKey
+    let getOctopusVariables = OctopusConnector.GetVariableSet octopusServer apiKey
     let environnmentVariables = pathConfigFile |> readfile |> Parse prefix 
-    UpdateProjectEnvironnmentVariable projectName environnmentVariables updateOctopusVariables |> ignore
+    UpdateProjectEnvironnmentVariable projectName environnmentVariables updateOctopusVariables getOctopusVariables |> ignore

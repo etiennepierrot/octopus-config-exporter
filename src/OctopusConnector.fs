@@ -10,6 +10,7 @@ let GetVariableSet octopusServer apiKey projectName =
     let convertToMap ( varset :Client.Model.VariableSetResource) = 
         varset.Variables 
         |> Seq.map( fun var -> var.Name,  [{ Value = var.Value; Scope  = None }])
+        |> Map.ofSeq
     getVariableSet repo projectName |> convertToMap
 
 let UpdateVariableSet octopusServer apiKey projectName  (environnmentVariables:Map<string, OctopusVariable list>)  =

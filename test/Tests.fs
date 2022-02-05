@@ -14,13 +14,30 @@ type``VarJsonParser should``(output:ITestOutputHelper) =
 
     let mutable MockOctopusVariables = Map[
                                         "fizz", [{ Value = "buzz"; Scope  = None }];  
-                                        "fizz2", [{ Value = "newbuzz2"; Scope  = None }];
+                                        "fizz2", [{ Value = "newbuzz"; Scope  = None }];
                                        ]
 
     let GetVariableSet projectName = MockOctopusVariables 
     let UpdateVariableSet projectName (environnmentVariables : Map<string, OctopusVariable list>) = 
         let update key value = MockOctopusVariables <- (MockOctopusVariables |> Map.change key  (fun _ -> Some value) )    
         environnmentVariables |> Map.iter update
+
+    
+    [<Fact>]
+    let ``Plan should indicate change on existing value`` () =
+        Plan "test" (Map ["fizz", "buzz";  "fizz2", "CHANGED";]) GetVariableSet
+        |> should be (equalto (Map[
+        "fizz2", { OldValue = Some "newbuzz"; NewValue = "CHANGED"};
+        ]))
+
+    
+    [<Fact>]
+    let ``Plan should indicate change on new value`` () =
+        Plan "test" ( Map ["something", "new"]) GetVariableSet
+        |> should be (equalto (Map[
+        "something", { OldValue = None; NewValue = "new"};
+        ]))
+
         
     [<Fact>]
     let ``Can modify octopus variable`` () =
