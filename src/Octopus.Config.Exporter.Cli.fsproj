@@ -7,7 +7,9 @@
 
   <ItemGroup>
     <Compile Include="VarJsonParser.fs" />
-    <Compile Include="OctocusConnector.fs" />
+    <Compile Include="OctocusVariableManager.fs" />
+	<Compile Include="OctopusConnector.fs" />
+	<Compile Include="CliAgurmentParser.fs" />
 	<Compile Include="CompositionRoot.fs" />
 	<Compile Include="Program.fs" />
   </ItemGroup>

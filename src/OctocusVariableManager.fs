@@ -1,4 +1,4 @@
-﻿module OctocusConnector
+﻿module OctocusVariableManager
 
 type OctopusVariable = { Value :string; Scope :Option<string> }
 

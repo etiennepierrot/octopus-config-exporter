@@ -1,7 +1,7 @@
 module Tests
 open FsUnit
 open Octopus
-open OctocusConnector
+open OctocusVariableManager
 open VarJsonParser
 open Xunit
 open Xunit.Abstractions
