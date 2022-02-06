@@ -1,6 +1,6 @@
 ﻿module OctocusVariableManager
 
-type OctopusVariable = { Value :string; Scope :Option<string> }
+type ScopedKey = { Key :string; Scope :Option<string> }
 
 type Change =
     {
@@ -8,27 +8,33 @@ type Change =
         NewValue :string
     }
 
-let Plan projectName (environnmentVariables : Map<string, string>) (getVariableSet : string ->  Map<string, OctopusVariable list>) =
+let Plan projectName (environnmentVariables :Map<string, string>) (scope :Option<string>) (getVariableSet :string ->  Map<ScopedKey, string>) =
     let variableSet = getVariableSet projectName
+    let filterVariableSet key value =
+        not (variableSet.ContainsKey({Key = key; Scope = scope;}))  || 
+        (variableSet[{Key = key; Scope = scope;}] <> value)
+    let createChange scopedKey value = 
+        {
+            OldValue = variableSet.TryFind scopedKey
+            NewValue = value
+        }
     environnmentVariables 
-    |> Map.filter( fun k v -> not (variableSet.ContainsKey(k)) ||  variableSet[k].Head.Value <> v ) 
-    |> Map.map(fun k v -> { OldValue = ( if variableSet.ContainsKey(k) then Some variableSet[k].Head.Value else None); NewValue = v } )
+            |> Map.filter filterVariableSet
+            |> Map.map (fun k v -> createChange {Key = k; Scope = scope;}  v)
 
-let Apply (changes :Map<string, Change>) projectName  updateVariableSet=
-    changes
-    |> Map.map (fun _ v -> [{Value = v.NewValue; Scope = None}] )
-    |> updateVariableSet projectName
-    |> ignore
+let Apply (changes :Map<ScopedKey, Change>) projectName (updateVariableSet :Map<ScopedKey, string> -> unit) =
+     changes
+     |> Map.map (fun k v -> v.NewValue )
+     |> updateVariableSet
 
-let UpdateProjectEnvironnmentVariable  projectName (environnmentVariables : Map<string, string>) updateVariableSet getVariableSet =
-    let changes = Plan projectName environnmentVariables getVariableSet
-    Apply changes projectName updateVariableSet |> ignore
+let UpdateProjectEnvironnmentVariable  projectName (environnmentVariables : Map<string, string>) (scope :Option<string>) (updateVariableSet :Map<ScopedKey, string> -> unit)  getVariableSet =
+    let changes = Plan projectName environnmentVariables scope getVariableSet
+                    |> Map.toList 
+                    |> List.map ( fun (k, v) -> ({Key = k; Scope = scope;}, v) ) 
+                    |> Map.ofList
+    Apply changes projectName updateVariableSet
 
-let GetProjectEnvironnmentVariables projectName (getVariableSet : string ->  Map<string, OctopusVariable list>) =
-    let variableSet = getVariableSet projectName
-    variableSet 
+let GetProjectEnvironnmentVariables projectName (getVariableSet : string ->  Map<ScopedKey, string>) =
+    getVariableSet projectName
     |> Seq.toList 
     |> Seq.map( fun var -> (var.Key, var.Value))
-
-
-    

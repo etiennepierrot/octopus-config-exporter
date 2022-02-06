@@ -13,40 +13,47 @@ type``VarJsonParser should``(output:ITestOutputHelper) =
     let equalto = equal
 
     let mutable MockOctopusVariables = Map[
-                                        "fizz", [{ Value = "buzz"; Scope  = None }];  
-                                        "fizz2", [{ Value = "newbuzz"; Scope  = None }];
+                                        {Key = "fizz"; Scope  = None}, "buzz" ;  
+                                        {Key = "fizz2"; Scope  = None}, "newbuzz";  
+                                        {Key = "fizz2"; Scope  = Some "QA"}, "newbuzz-QA";  
                                        ]
 
     let GetVariableSet projectName = MockOctopusVariables 
-    let UpdateVariableSet projectName (environnmentVariables : Map<string, OctopusVariable list>) = 
+    let UpdateVariableSet (environnmentVariables :Map<ScopedKey, string>) = 
         let update key value = MockOctopusVariables <- (MockOctopusVariables |> Map.change key  (fun _ -> Some value) )    
         environnmentVariables |> Map.iter update
 
-    
+        
     [<Fact>]
     let ``Plan should indicate change on existing value`` () =
-        Plan "test" (Map ["fizz", "buzz";  "fizz2", "CHANGED";]) GetVariableSet
+        Plan "test" (Map ["fizz", "buzz"; "fizz2", "CHANGED";]) None GetVariableSet
         |> should be (equalto (Map[
         "fizz2", { OldValue = Some "newbuzz"; NewValue = "CHANGED"};
         ]))
-
+    
     
     [<Fact>]
     let ``Plan should indicate change on new value`` () =
-        Plan "test" ( Map ["something", "new"]) GetVariableSet
+        Plan "test" ( Map ["something", "new"]) None  GetVariableSet
         |> should be (equalto (Map[
         "something", { OldValue = None; NewValue = "new"};
         ]))
 
+    [<Fact>]
+    let ``Plan should indicate change on new value`` () =
+        Plan "test" ( Map ["something", "new"]) None GetVariableSet
+        |> should be (equalto (Map[
+        "something", { OldValue = None; NewValue = "new"};
+        ]))
         
     [<Fact>]
     let ``Can modify octopus variable`` () =
         let environnmentVariables = Map ["fizz", "buzz";  "fizz2", "newbuzz2";]
-        UpdateProjectEnvironnmentVariable "test" environnmentVariables UpdateVariableSet
+        UpdateProjectEnvironnmentVariable "test" environnmentVariables None UpdateVariableSet GetVariableSet|> ignore
         let (_, value) = GetProjectEnvironnmentVariables "test" GetVariableSet
-                            |> Seq.find(fun (key, _) -> key = "fizz")
+                            |> Seq.find(fun (key, _) -> key =  {Key =  "fizz"; Scope = None; })
         value
-        |> should be (equalto [{ Value = "buzz"; Scope = None }])
+        |> should be (equalto "buzz")
         
     [<Fact>]
     let ``Transform json config into environnement variable`` () =
