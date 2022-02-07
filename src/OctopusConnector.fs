@@ -3,23 +3,34 @@ open Octopus
 open Octopus.Client
 open Octopus.Client.Model
 open OctocusVariableManager
-
-
-type StacitMemberCls() = 
-    static let mutable staticFiled = ""  
-    static member StaticProp
-        with get() = staticFiled
-        and set(v) = staticFiled <- v
+open System.Collections.Generic
 
 let getOctopusRepository serverUrl apikey = OctopusServerEndpoint(serverUrl, apikey) |> OctopusRepository
+
+let memoize f =
+    let dict = Dictionary<_, _>();
+    fun c ->
+        let exist, value = dict.TryGetValue c
+        match exist with
+        | true -> value
+        | _ -> 
+            let value = f c
+            dict.Add(c, value)
+            value
+
+let findEnvironnment (repo :OctopusRepository) = 
+    repo.Environments.FindAll()
+
+let memoFindEnvironnment = memoize findEnvironnment
+
 let getVariableSet (repo :OctopusRepository) = repo.Projects.FindByName >> (fun p -> repo.VariableSets.Get(p.VariableSetId) ) 
 let getEnvironnmentByScope (repo :OctopusRepository) (scope :string) =
-     repo.Environments.FindAll() 
+     memoFindEnvironnment repo
      |> Seq.toList 
      |> List.find(fun e -> e.Name = scope)
 
 let getScopeByEnvironnmentId (repo :OctopusRepository) (environnementId :string) =
-    (repo.Environments.FindAll() 
+    (memoFindEnvironnment repo
     |> Seq.toList 
     |> List.find(fun e -> e.Id = environnementId)).Name
 
