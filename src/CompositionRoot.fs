@@ -11,9 +11,7 @@ let Export =
     let octopusServer = results.GetResult OctopusServer
     let apiKey = results.GetResult OctopusApiKey
     let projectName = results.GetResult OctopusProject
-    let prefix = match results.TryGetResult Prefix with
-                 | Some prefix -> prefix
-                 | _ -> ""
+    let prefix = results.TryGetResult Prefix
     
     let updateOctopusVariables = OctopusConnector.UpdateVariableSet octopusServer apiKey projectName
     let getOctopusVariables = OctopusConnector.GetVariableSet octopusServer apiKey

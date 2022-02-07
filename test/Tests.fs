@@ -28,7 +28,7 @@ type``VarJsonParser should``(output:ITestOutputHelper) =
     let ``Plan should indicate change on existing value`` () =
         Plan "test" (Map ["fizz", "buzz"; "fizz2", "CHANGED";]) None GetVariableSet
         |> should be (equalto (Map[
-        "fizz2", { OldValue = "newbuzz"; NewValue = "CHANGED"};
+        { Key = "fizz2"; Scope  = None}, Modify { OldValue = "newbuzz"; NewValue = "CHANGED"};
         ]))
     
     
@@ -36,14 +36,7 @@ type``VarJsonParser should``(output:ITestOutputHelper) =
     let ``Plan should indicate change on new value`` () =
         Plan "test" ( Map ["something", "new"]) None  GetVariableSet
         |> should be (equalto (Map[
-        "something",  "new";
-        ]))
-
-    [<Fact>]
-    let ``Plan should indicate change on new value`` () =
-        Plan "test" ( Map ["something", "new"]) None GetVariableSet
-        |> should be (equalto (Map[
-        "something", "new";
+        { Key = "something"; Scope  = None}, New "new";
         ]))
         
     [<Fact>]
@@ -59,10 +52,10 @@ type``VarJsonParser should``(output:ITestOutputHelper) =
     let ``Transform json config into environnement variable`` () =
         "config_sample.json" 
         |> readfile
-        |> Parse "PREFIX" 
+        |> Parse (Some "PREFIX") 
         |> Map.toList
         |> should be (equalto [
-        ("PREFIX_array_0_keyinside", "BOOM");
+        ("PREFIX_array__0__keyinside", "BOOM");
         ("PREFIX_key1", "value1");
         ("PREFIX_key2", "value2"); 
         ("PREFIX_key3", "False");
@@ -75,10 +68,10 @@ type``VarJsonParser should``(output:ITestOutputHelper) =
     let ``Transform json config into environnement variable without prefix`` () =
         "config_sample.json" 
         |> readfile
-        |> Parse "" 
+        |> Parse None 
         |> Map.toList
         |> should be (equalto [
-        ("array_0_keyinside", "BOOM")
+        ("array__0__keyinside", "BOOM")
         ("key1", "value1"); 
         ("key2", "value2"); 
         ("key3", "False"); 
@@ -92,9 +85,9 @@ type``VarJsonParser should``(output:ITestOutputHelper) =
     let ``Display environnement variable`` () =
         "config_sample.json" 
                 |> readfile
-                |> Parse "PREFIX"
+                |> Parse (Some "PREFIX")
                 |> Print
-                |> should equalto "PREFIX_array_0_keyinside=BOOM\n\
+                |> should equalto "PREFIX_array__0__keyinside=BOOM\n\
                                    PREFIX_key1=value1\n\
                                    PREFIX_key2=value2\n\
                                    PREFIX_key3=False\n\
