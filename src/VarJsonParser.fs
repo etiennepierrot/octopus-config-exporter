@@ -28,7 +28,7 @@ let Parse (prefix :Option<string>) (json :string) : Map<string, string> =
                                     |> Array.map(fun (childKey, child) -> child |> parseChild ( concat childKey) ) 
                                     |> Array.fold join Map.empty
         let exploreArray array = array 
-                                    |> Array.mapi(fun idx child -> child |> parseChild ( concat (idx |> string ) ) ) 
+                                    |> Array.mapi(fun idx child -> child |> parseChild ( concat  (idx |> string ) ) ) 
                                     |> Array.fold join Map.empty
 
         match key with 
@@ -36,13 +36,13 @@ let Parse (prefix :Option<string>) (json :string) : Map<string, string> =
                      | JsonValue.Record  r -> r  |> exploreRecord 
                      | _                   -> raise (System.ArgumentException("Parsing error"))
         |Key node -> match jsonValue with
-                    | JsonValue.String  s -> map.Add ( node, s )
-                    | JsonValue.Boolean b -> map.Add ( node, b  |> string) 
-                    | JsonValue.Null    _ -> map.Add ( node, "" )
-                    | JsonValue.Number  n -> map.Add ( node, n  |> string )
-                    | JsonValue.Record  r -> r  |> exploreRecord
-                    | JsonValue.Array   a -> a  |> exploreArray
-                    | _                   -> raise (System.ArgumentException("Parsing error"))
+                        | JsonValue.String  s -> map.Add ( node, s )
+                        | JsonValue.Boolean b -> map.Add ( node, b  |> string) 
+                        | JsonValue.Null    _ -> map.Add ( node, "" )
+                        | JsonValue.Number  n -> map.Add ( node, n  |> string )
+                        | JsonValue.Record  r -> r  |> exploreRecord
+                        | JsonValue.Array   a -> a  |> exploreArray
+                        | _                   -> raise (System.ArgumentException("Parsing error"))
 
     JsonValue.Parse(json) |> parseNode (prefix |> Root) Map.empty
 
