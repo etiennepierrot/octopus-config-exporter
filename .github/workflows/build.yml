@@ -1,4 +1,4 @@
-name: .NET
+name: build and test
 
 on:
   push:
@@ -8,9 +8,7 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET
@@ -22,7 +20,10 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore 
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test --no-build --verbosity normal    
+  publish:
+    runs-on: ubuntu-latest
+    steps:
     - name: Pack
       run: dotnet pack --no-build --verbosity normal
     - name: Publish to NuGet
@@ -32,3 +33,4 @@ jobs:
         VERSION_REGEX: '^\s*<PackageVersion>(.*)<\/PackageVersion>\s*$'
         TAG_FORMAT: '*'
         NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+
