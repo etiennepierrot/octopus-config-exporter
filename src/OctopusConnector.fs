@@ -5,7 +5,11 @@ open Octopus.Client.Model
 open OctocusVariableManager
 open System.Collections.Generic
 
-let getOctopusRepository serverUrl apikey = OctopusServerEndpoint(serverUrl, apikey) |> OctopusRepository
+type OctopusConfig = { Url :string; ApiKey :string; }
+
+let getOctopusRepository octopusConfig = 
+    OctopusServerEndpoint(octopusConfig.Url, octopusConfig.ApiKey) 
+    |> OctopusRepository
 
 let memoize f =
     let dict = Dictionary<_, _>();
@@ -34,8 +38,8 @@ let getScopeByEnvironnmentId (repo :OctopusRepository) (environnementId :string)
     |> Seq.toList 
     |> List.find(fun e -> e.Id = environnementId)).Name
 
-let GetVariableSet octopusServer apiKey projectName = 
-    let repo = getOctopusRepository octopusServer apiKey
+let GetVariableSet octopusConfig projectName = 
+    let repo = getOctopusRepository octopusConfig 
     let join (p:Map<'a,'b>) (q:Map<'a,'b>) = 
         Map(Seq.concat [ (Map.toSeq p) ; (Map.toSeq q) ])
     let convertToMap (variableResource :VariableResource) :  Map<ScopedKey, string> =
@@ -51,8 +55,8 @@ let GetVariableSet octopusServer apiKey projectName =
     |> Seq.map convertToMap
     |> Seq.fold join Map.empty
 
-let UpdateVariableSet octopusServer apiKey projectName (environnmentVariables :Map<ScopedKey, string>) =
-    let repo = getOctopusRepository octopusServer apiKey
+let UpdateVariableSet octopusConfig projectName (environnmentVariables :Map<ScopedKey, string>) =
+    let repo = getOctopusRepository octopusConfig
     let variableSet = getVariableSet repo projectName
     let scope (s :string) = 
         let scope = new ScopeSpecification()

@@ -6,10 +6,11 @@ open System
 
 type CliArguments =
     | [<Mandatory>] ConfigFile of path:string
-    | OctopusServer of server:string
-    | OctopusApiKey of apiKey:string
-    | OctopusProject of projectName:string
+    | [<Mandatory>] OctopusServer of server:string
+    | [<Mandatory>] OctopusApiKey of apiKey:string
+    | [<Mandatory>] OctopusProject of projectName:string
     | Prefix of prefix:string
+    | Scope of prefix:string
 
     interface IArgParserTemplate with
         member s.Usage =
@@ -19,6 +20,7 @@ type CliArguments =
             | OctopusApiKey _ -> "specify your api key"
             | OctopusProject _ -> "specify the project name"
             | Prefix _ -> "specify the prefix of Env Var"
+            | Scope _ -> "scope for applying config"
 
 
 let DisplayPlan plan= 

@@ -3,22 +3,26 @@ open Argu
 open CliAgurmentParser
 open OctocusVariableManager
 open VarJsonParser
+open OctopusConnector
 
 let Export = 
     let parser = ArgumentParser.Create<CliArguments>()
     let results = parser.Parse()
     let pathConfigFile = results.GetResult ConfigFile
-    let octopusServer = results.GetResult OctopusServer
-    let apiKey = results.GetResult OctopusApiKey
     let projectName = results.GetResult OctopusProject
     let prefix = results.TryGetResult Prefix
-    
-    let updateOctopusVariables = OctopusConnector.UpdateVariableSet octopusServer apiKey projectName
-    let getOctopusVariables = OctopusConnector.GetVariableSet octopusServer apiKey
+    let scope = results.TryGetResult Scope
+    let octopusConfig = 
+        { 
+          Url = results.GetResult OctopusServer;
+          ApiKey = results.GetResult OctopusApiKey; 
+        }
+    let updateOctopusVariables = OctopusConnector.UpdateVariableSet octopusConfig projectName
+    let getOctopusVariables = OctopusConnector.GetVariableSet octopusConfig
     let ParseEnvironnmentVariablesFromFile = System.IO.File.ReadAllText >> (Parse prefix)
     let environnmentVariables = ParseEnvironnmentVariablesFromFile pathConfigFile
 
-    let plan = Plan projectName environnmentVariables None getOctopusVariables
+    let plan = Plan projectName environnmentVariables scope getOctopusVariables
     let ApplyPlan plan = Apply plan projectName updateOctopusVariables
     
     DisplayPlan plan
