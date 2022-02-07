@@ -28,7 +28,7 @@ type``VarJsonParser should``(output:ITestOutputHelper) =
     let ``Plan should indicate change on existing value`` () =
         Plan "test" (Map ["fizz", "buzz"; "fizz2", "CHANGED";]) None GetVariableSet
         |> should be (equalto (Map[
-        "fizz2", { OldValue = Some "newbuzz"; NewValue = "CHANGED"};
+        "fizz2", { OldValue = "newbuzz"; NewValue = "CHANGED"};
         ]))
     
     
@@ -36,14 +36,14 @@ type``VarJsonParser should``(output:ITestOutputHelper) =
     let ``Plan should indicate change on new value`` () =
         Plan "test" ( Map ["something", "new"]) None  GetVariableSet
         |> should be (equalto (Map[
-        "something", { OldValue = None; NewValue = "new"};
+        "something",  "new";
         ]))
 
     [<Fact>]
     let ``Plan should indicate change on new value`` () =
         Plan "test" ( Map ["something", "new"]) None GetVariableSet
         |> should be (equalto (Map[
-        "something", { OldValue = None; NewValue = "new"};
+        "something", "new";
         ]))
         
     [<Fact>]

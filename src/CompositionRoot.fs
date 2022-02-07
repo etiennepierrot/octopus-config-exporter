@@ -15,8 +15,14 @@ let Export =
                  | Some prefix -> prefix
                  | _ -> ""
     
-    let readfile = System.IO.File.ReadAllText
     let updateOctopusVariables = OctopusConnector.UpdateVariableSet octopusServer apiKey projectName
     let getOctopusVariables = OctopusConnector.GetVariableSet octopusServer apiKey
-    let environnmentVariables = pathConfigFile |> readfile |> Parse prefix 
-    UpdateProjectEnvironnmentVariable projectName environnmentVariables None updateOctopusVariables getOctopusVariables |> ignore
+    let ParseEnvironnmentVariablesFromFile = System.IO.File.ReadAllText >> (Parse prefix)
+    let environnmentVariables = ParseEnvironnmentVariablesFromFile pathConfigFile
+
+    let plan = Plan projectName environnmentVariables None getOctopusVariables
+    let ApplyPlan plan = Apply plan projectName updateOctopusVariables
+    
+    DisplayPlan plan
+    AskApply (ApplyPlan) (plan)
+
