@@ -19,11 +19,12 @@ jobs:
     - name: Pack
       run: dotnet pack --no-build --verbosity normal
     - name: Publish to NuGet
-      uses: brandedoutcast/publish-nuget@v2
+      id: publish_nuget
+      uses: rohith/publish-nuget@v2
       with:
         PROJECT_FILE_PATH: src/Octopus.Config.Exporter.Cli.fsproj
         VERSION_REGEX: '^\s*<PackageVersion>(.*)<\/PackageVersion>\s*$'
         TAG_FORMAT: '*'
         NUGET_KEY: ${{secrets.NUGET_API_KEY}}
-        INCLUDE_SYMBOLS: true
+        INCLUDE_SYMBOLS:
 
