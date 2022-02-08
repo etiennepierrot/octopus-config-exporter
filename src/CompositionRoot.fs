@@ -22,11 +22,10 @@ let Export =
     let getOctopusVariables _ =  OctopusConnector.GetVariableSet octopusConfig
     
     let Plan = OctocusVariableManager.Plan scope getOctopusVariables
+    let Apply = OctocusVariableManager.Apply updateOctopusVariables
     let ExtractChangesPlanFromFile = System.IO.File.ReadAllText >> (Parse prefix) >> Plan 
    
     let plan = pathConfigFile |> ExtractChangesPlanFromFile
-    let ApplyPlan = Apply updateOctopusVariables
-    
     DisplayPlan plan
-    AskApply (ApplyPlan) (plan)
+    AskApply (Apply) (plan)
 
