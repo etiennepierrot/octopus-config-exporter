@@ -13,8 +13,8 @@ type Change =
     | New of string
    
 
-let Plan projectName (environnmentVariables :Map<string, string>) (scope :Option<string>) (getVariableSet :string ->  Map<ScopedKey, string>) =
-    let variableSet = getVariableSet projectName
+let Plan (scope :Option<string>) (getVariableSet :unit ->  Map<ScopedKey, string>) (environnmentVariables :Map<string, string>) =
+    let variableSet = getVariableSet()
     let filterVariableSet key value =
         not (variableSet.ContainsKey({Key = key; Scope = scope;}))  || 
         (variableSet[{Key = key; Scope = scope;}] <> value)
@@ -33,7 +33,7 @@ let Plan projectName (environnmentVariables :Map<string, string>) (scope :Option
             |> Seq.map( fun var -> ({Key = var.Key; Scope = scope;}, var.Value))
             |> Map.ofSeq
 
-let Apply (changes :Map<ScopedKey, Change>) projectName (updateVariableSet :Map<ScopedKey, string> -> unit) =
+let Apply (updateVariableSet :Map<ScopedKey, string> -> unit) (changes :Map<ScopedKey, Change>) =
     let updatedValue = function 
                         | Modify s -> s.NewValue 
                         | New s -> s
@@ -42,11 +42,7 @@ let Apply (changes :Map<ScopedKey, Change>) projectName (updateVariableSet :Map<
     |> updateVariableSet
 
 
-let UpdateProjectEnvironnmentVariable  projectName (environnmentVariables : Map<string, string>) (scope :Option<string>) (updateVariableSet :Map<ScopedKey, string> -> unit)  getVariableSet =
-    let changes = Plan projectName environnmentVariables scope getVariableSet
-    Apply changes projectName updateVariableSet
-
-let GetProjectEnvironnmentVariables projectName (getVariableSet : string ->  Map<ScopedKey, string>) =
-    getVariableSet projectName
+let GetProjectEnvironnmentVariables (getVariableSet : unit ->  Map<ScopedKey, string>) =
+    getVariableSet()
     |> Seq.toList 
     |> Seq.map( fun var -> (var.Key, var.Value))

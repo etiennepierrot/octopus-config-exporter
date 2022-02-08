@@ -27,11 +27,15 @@ let DisplayPlan plan=
     let display (key :ScopedKey)  (change :Change) = 
         match key.Scope with
         | Some scope ->  match change with 
-                                        | Modify mv -> sprintf "Modified variable %s from %s to %s in %s environnement" key.Key mv.OldValue mv.NewValue scope
-                                        | New s -> sprintf "New variable %s with %s in %s environnement" key.Key s scope
+                                        | Modify mv -> sprintf "Modified variable %s from %s to %s in %s environnement" 
+                                                                key.Key mv.OldValue mv.NewValue scope
+                                        | New s -> sprintf "New variable %s with %s in %s environnement" 
+                                                            key.Key s scope
         | None ->  match change with 
-                                        | Modify mv -> sprintf "Modified variable %s from %s to %s" key.Key mv.OldValue mv.NewValue
-                                        | New s -> sprintf "New variable %s with %s" key.Key s
+                                        | Modify mv -> sprintf "Modified variable %s from %s to %s" 
+                                                                key.Key mv.OldValue mv.NewValue
+                                        | New s -> sprintf "New variable %s with %s" 
+                                                            key.Key s
 
     plan 
     |> Map.map display 

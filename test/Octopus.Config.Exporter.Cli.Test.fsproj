@@ -1,11 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Tests.fs" />
+    <Compile Include="OctocusVariableManagerTest.fs" />
+    <Compile Include="VarJsonParser.fs" />
 	<Compile Include="Program.fs" />
     <Content Include="config_sample.json" CopyToOutputDirectory="Always" />
   </ItemGroup>
