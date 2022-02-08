@@ -11,6 +11,7 @@ let Export =
     let pathConfigFile = results.GetResult ConfigFile
     let prefix = results.TryGetResult Prefix
     let scope = results.TryGetResult Scope
+    
     let octopusConfig = 
         { 
           Url = results.GetResult OctopusServer;
@@ -19,11 +20,11 @@ let Export =
         }
     let updateOctopusVariables = OctopusConnector.UpdateVariableSet octopusConfig
     let getOctopusVariables _ =  OctopusConnector.GetVariableSet octopusConfig
-    let ParseEnvironnmentVariablesFromFile = System.IO.File.ReadAllText >> (Parse prefix)
-    let environnmentVariables = ParseEnvironnmentVariablesFromFile pathConfigFile
-
-    let plan = environnmentVariables 
-                |> Plan scope getOctopusVariables
+    
+    let Plan = OctocusVariableManager.Plan scope getOctopusVariables
+    let ExtractChangesPlanFromFile = System.IO.File.ReadAllText >> (Parse prefix) >> Plan 
+   
+    let plan = pathConfigFile |> ExtractChangesPlanFromFile
     let ApplyPlan = Apply updateOctopusVariables
     
     DisplayPlan plan
