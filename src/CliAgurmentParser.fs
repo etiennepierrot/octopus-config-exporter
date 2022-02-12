@@ -2,29 +2,63 @@
 open Argu
 open OctocusVariableManager
 open System
+open DotNetConfig
+open System.Collections.Generic
 
+[<Literal>]
+let OctopusServerAppSettings = "OCTOPUS_SERVER"
+[<Literal>]
+let OctopusApiKeyAppSettings = "OCTOPUS_API_KEY"
+[<Literal>]
+let OctopusProjectNameAppSettings = "OCTOPUS_PROJECT_NAME"
+[<Literal>]
+let OctopusPrefix = "OCTOPUS_PREFIX"
 
 type CliArguments =
     | [<Mandatory>] [<MainCommand; ExactlyOnce; First>] ConfigFile of path:string
-    | [<Mandatory>] [<CustomAppSettings "OCTOPUS_SERVER">] OctopusServer of server:string
-    | [<Mandatory>] [<CustomAppSettings "OCTOPUS_API_KEY">] OctopusApiKey of apiKey:string
-    | [<Mandatory>] OctopusProject of projectName:string
-    | Prefix of prefix:string
+    | [<Mandatory>] [<CustomAppSettings(OctopusServerAppSettings)>] OctopusServer of server:string
+    | [<Mandatory>] [<CustomAppSettings(OctopusApiKeyAppSettings)>] OctopusApiKey of apiKey:string
+    | [<Mandatory>] [<CustomAppSettings(OctopusProjectNameAppSettings)>] OctopusProject of projectName:string
+    | [<CustomAppSettings(OctopusPrefix)>] Prefix of prefix:string
     | Scope of prefix:string
 
     interface IArgParserTemplate with
         member s.Usage =
             match s with
             | ConfigFile _ -> "specify a json config file to export"
-            | OctopusServer _ -> "specify a the address of the octopus server (can also be set with OCTOPUS_SERVER environnment variable) "
-            | OctopusApiKey _ -> "specify your api key (can also be set with OCTOPUS_API_KEY environnment variable)"
-            | OctopusProject _ -> "specify the project name"
-            | Prefix _ -> "specify the prefix of Env Var"
+            | OctopusServer _ ->  sprintf "specify a the address of the octopus server (can also be set with %s environnment variable)" OctopusServerAppSettings
+            | OctopusApiKey _ -> sprintf "specify your api key (can also be set with %s environnment variable)" OctopusApiKeyAppSettings
+            | OctopusProject _ -> sprintf "specify the project name (can also be set with %s environnment variable)" OctopusProjectNameAppSettings
+            | Prefix _ -> sprintf "specify the prefix of Env Var (can also be set with %s environnment variable)" OctopusPrefix
             | Scope _ -> "scope for applying config"
 
 let ParseArgs (exec : ParseResults<CliArguments> -> int )  =
     let readConfig _ = 
-        let configurationReader = ConfigurationReader.FromEnvironmentVariables()
+        let dic = Dictionary<string, string>()
+        let config = Config.Build()
+        let addConfigFromDotnetConfig key (section, variable)  =
+            let value = config.GetString(section, variable) 
+            if(value <> null) then 
+                dic.Add(key, value)
+        Map [
+            OctopusServerAppSettings, ("octopus", "serverUrl");
+            OctopusApiKeyAppSettings, ("octopus", "apiKey");
+            OctopusProjectNameAppSettings, ("octopus", "projectName");
+            OctopusPrefix, ("octopus", "prefix");
+        ] 
+        |> Map.iter addConfigFromDotnetConfig
+
+        let envVarconfigurationReader = ConfigurationReader.FromEnvironmentVariables()
+        let functionReader (key :string) : option<string> =
+            if(dic.ContainsKey(key)) then 
+                Some dic[key]
+            else 
+                let value = (envVarconfigurationReader.GetValue(key))
+                printfn "%s %s" key  value
+                Some (envVarconfigurationReader.GetValue(key))
+            
+        let configurationReader = ConfigurationReader.FromFunction functionReader
+       
         let parser =  ArgumentParser.Create<CliArguments>()
         parser.Parse(configurationReader= configurationReader)
     try
