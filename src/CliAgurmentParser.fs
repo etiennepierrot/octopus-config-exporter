@@ -5,9 +5,9 @@ open System
 
 
 type CliArguments =
-    | [<Mandatory>] ConfigFile of path:string
-    | [<Mandatory>] OctopusServer of server:string
-    | [<Mandatory>] OctopusApiKey of apiKey:string
+    | [<Mandatory>] [<MainCommand; ExactlyOnce; First>] ConfigFile of path:string
+    | [<Mandatory>] [<CustomAppSettings "OCTOPUS_SERVER">] OctopusServer of server:string
+    | [<Mandatory>] [<CustomAppSettings "OCTOPUS_API_KEY">] OctopusApiKey of apiKey:string
     | [<Mandatory>] OctopusProject of projectName:string
     | Prefix of prefix:string
     | Scope of prefix:string
