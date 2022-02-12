@@ -23,7 +23,7 @@ jobs:
       run: dotnet build --configuration Debug --no-restore 
     - name: Test
       run: dotnet test --no-build --verbosity normal
-      with:
+      env:
         OCTOPUS_API_KEY: ${{secrets.OCTOPUS_API_KEY}}
 
 
