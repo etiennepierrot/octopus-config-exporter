@@ -5,9 +5,9 @@ open System
 
 
 type CliArguments =
-    | [<Mandatory>] ConfigFile of path:string
-    | [<Mandatory>] OctopusServer of server:string
-    | [<Mandatory>] OctopusApiKey of apiKey:string
+    | [<Mandatory>] [<MainCommand; ExactlyOnce; First>] ConfigFile of path:string
+    | [<Mandatory>] [<CustomAppSettings "OCTOPUS_SERVER">] OctopusServer of server:string
+    | [<Mandatory>] [<CustomAppSettings "OCTOPUS_API_KEY">] OctopusApiKey of apiKey:string
     | [<Mandatory>] OctopusProject of projectName:string
     | Prefix of prefix:string
     | Scope of prefix:string
@@ -16,11 +16,22 @@ type CliArguments =
         member s.Usage =
             match s with
             | ConfigFile _ -> "specify a json config file to export"
-            | OctopusServer _ -> "specify a the address of the octopus server"
-            | OctopusApiKey _ -> "specify your api key"
+            | OctopusServer _ -> "specify a the address of the octopus server (can also be set with OCTOPUS_SERVER environnment variable) "
+            | OctopusApiKey _ -> "specify your api key (can also be set with OCTOPUS_API_KEY environnment variable)"
             | OctopusProject _ -> "specify the project name"
             | Prefix _ -> "specify the prefix of Env Var"
             | Scope _ -> "scope for applying config"
+
+let ParseArgs (exec : ParseResults<CliArguments> -> int )  =
+    let readConfig _ = 
+        let configurationReader = ConfigurationReader.FromEnvironmentVariables()
+        let parser =  ArgumentParser.Create<CliArguments>()
+        parser.Parse(configurationReader= configurationReader)
+    try
+        readConfig() |> exec
+    with e ->
+        printfn "%s" e.Message
+        -1
 
 
 let DisplayPlan plan= 
