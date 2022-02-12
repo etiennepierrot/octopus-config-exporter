@@ -33,8 +33,8 @@ let Parse (prefix :Option<string>) (json :string) : Map<string, string> =
 
         match key with 
         | Root _ ->  match jsonValue with
-                     | JsonValue.Record  r -> r  |> exploreRecord 
-                     | _                   -> raise (System.ArgumentException("Parsing error"))
+                        | JsonValue.Record  r -> r  |> exploreRecord 
+                        | _                   -> raise (System.ArgumentException("Parsing error"))
         |Key node -> match jsonValue with
                         | JsonValue.String  s -> map.Add ( node, s )
                         | JsonValue.Boolean b -> map.Add ( node, b  |> string) 

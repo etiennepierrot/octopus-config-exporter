@@ -32,9 +32,9 @@ let getVariableSet (repo :OctopusRepository) (projectName :string) =
         >> (fun p -> repo.VariableSets.Get(p.VariableSetId)))
 
 let getEnvironnmentByScope (repo :OctopusRepository) (scope :string) =
-     memoFindEnvironnment repo
-     |> Seq.toList 
-     |> List.find(fun e -> e.Name = scope)
+    memoFindEnvironnment repo
+    |> Seq.toList 
+    |> List.find(fun e -> e.Name = scope)
 
 let getScopeByEnvironnmentId (repo :OctopusRepository) (environnementId :string) =
     (memoFindEnvironnment repo

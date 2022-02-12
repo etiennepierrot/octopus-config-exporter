@@ -1,22 +1,9 @@
 ﻿module CompositionRoot
-open Argu
 open CliAgurmentParser
-open OctocusVariableManager
 open VarJsonParser
 open OctopusConnector
 
-let Run (parsedResult :ParseResults<CliArguments>) = 
-  let pathConfigFile = parsedResult.GetResult ConfigFile
-  let projectName = parsedResult.GetResult OctopusProject
-  let prefix = parsedResult.TryGetResult Prefix
-  let scope = parsedResult.TryGetResult Scope
-    
-  let octopusConfig = 
-      { 
-        Url = results.GetResult OctopusServer;
-        ApiKey = results.GetResult OctopusApiKey; 
-        ProjectName = results.GetResult OctopusProject
-      }
+let Run (octopusConfig :OctopusConfig) (pathConfigFile :string) (prefix :option<string>) (scope :option<string>) = 
 
   let updateOctopusVariables = OctopusConnector.UpdateVariableSet octopusConfig
   let getOctopusVariables _ =  OctopusConnector.GetVariableSet octopusConfig

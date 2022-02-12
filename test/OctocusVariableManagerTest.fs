@@ -3,13 +3,14 @@ open FsUnit
 open OctocusVariableManager
 open Xunit
 open Xunit.Abstractions
+open Helper
 
 let equalto = equal
 
 let mutable MockOctopusVariables = Map[
                                     {Key = "fizz"; Scope  = None}, "buzz" ;  
                                     {Key = "fizz2"; Scope  = None}, "newbuzz";  
-                                    {Key = "fizz2"; Scope  = Some "QA"}, "newbuzz-QA";  
+                                    {Key = "fizz2"; Scope  = QA}, "newbuzz-QA";  
                                    ]
 
 let GetVariableSet _ = MockOctopusVariables 

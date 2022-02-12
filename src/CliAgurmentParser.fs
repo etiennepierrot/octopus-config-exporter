@@ -4,6 +4,7 @@ open OctocusVariableManager
 open System
 open DotNetConfig
 open System.Collections.Generic
+open OctopusConnector
 
 [<Literal>]
 let OctopusServerAppSettings = "OCTOPUS_SERVER"
@@ -13,6 +14,13 @@ let OctopusApiKeyAppSettings = "OCTOPUS_API_KEY"
 let OctopusProjectNameAppSettings = "OCTOPUS_PROJECT_NAME"
 [<Literal>]
 let OctopusPrefix = "OCTOPUS_PREFIX"
+
+let DotNetConfigToAppSettingsMapping =  Map [
+            OctopusServerAppSettings, ("octopus", "serverUrl");
+            OctopusApiKeyAppSettings, ("octopus", "apiKey");
+            OctopusProjectNameAppSettings, ("octopus", "projectName");
+            OctopusPrefix, ("octopus", "prefix");
+        ] 
 
 type CliArguments =
     | [<Mandatory>] [<MainCommand; ExactlyOnce; First>] ConfigFile of path:string
@@ -32,37 +40,45 @@ type CliArguments =
             | Prefix _ -> sprintf "specify the prefix of Env Var (can also be set with %s environnment variable)" OctopusPrefix
             | Scope _ -> "scope for applying config"
 
-let ParseArgs (exec : ParseResults<CliArguments> -> int )  =
-    let readConfig _ = 
+let GetOctopusConfig (parsedResult :ParseResults<CliArguments>) = 
+    { 
+        Url = parsedResult.GetResult OctopusServer;
+        ApiKey = parsedResult.GetResult OctopusApiKey; 
+        ProjectName = parsedResult.GetResult OctopusProject
+    }
+
+let ParseResult<'a when 'a :> IArgParserTemplate> ignoreUnrecognized   = 
+    let createDictionary =
         let dic = Dictionary<string, string>()
         let config = Config.Build()
         let addConfigFromDotnetConfig key (section, variable)  =
             let value = config.GetString(section, variable) 
             if(value <> null) then 
                 dic.Add(key, value)
-        Map [
-            OctopusServerAppSettings, ("octopus", "serverUrl");
-            OctopusApiKeyAppSettings, ("octopus", "apiKey");
-            OctopusProjectNameAppSettings, ("octopus", "projectName");
-            OctopusPrefix, ("octopus", "prefix");
-        ] 
-        |> Map.iter addConfigFromDotnetConfig
+        DotNetConfigToAppSettingsMapping |> Map.iter addConfigFromDotnetConfig
+        dic
 
-        let envVarconfigurationReader = ConfigurationReader.FromEnvironmentVariables()
-        let functionReader (key :string) : option<string> =
-            if(dic.ContainsKey(key)) then 
-                Some dic[key]
-            else 
-                let value = (envVarconfigurationReader.GetValue(key))
-                printfn "%s %s" key  value
-                Some (envVarconfigurationReader.GetValue(key))
-            
-        let configurationReader = ConfigurationReader.FromFunction functionReader
-       
-        let parser =  ArgumentParser.Create<CliArguments>()
-        parser.Parse(configurationReader= configurationReader)
+    let dictionary = createDictionary
+    let functionReader (key :string) : option<string> =
+        if(dictionary.ContainsKey(key)) then 
+            Some dictionary[key]
+        else 
+            Some (ConfigurationReader.FromEnvironmentVariables().GetValue(key))
+    ArgumentParser.Create<'a>().Parse(
+        configurationReader= (ConfigurationReader.FromFunction functionReader),
+        ignoreUnrecognized = ignoreUnrecognized 
+
+        )
+
+let ParseArgs (exec : OctopusConfig -> string -> option<string> -> option<string> -> int )  =
+    
     try
-        readConfig() |> exec
+        let parsedResult = ParseResult(false)
+        let octopusConfig = GetOctopusConfig parsedResult
+        let pathConfigFile = parsedResult.GetResult ConfigFile
+        let prefix = parsedResult.TryGetResult Prefix
+        let scope = parsedResult.TryGetResult Scope
+        exec octopusConfig pathConfigFile prefix scope
     with e ->
         printfn "%s" e.Message
         -1
