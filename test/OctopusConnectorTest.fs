@@ -1,6 +1,5 @@
 module OctopusConnectorTest
 open FsUnit
-open VarJsonParser
 open Xunit
 open Xunit.Abstractions
 open CliAgurmentParser
@@ -8,12 +7,8 @@ open Argu
 open OctopusConnector
 open OctocusVariableManager
 open Helper
+open System
 
-type``Connector``(output:ITestOutputHelper) =
-
-    let write result = output.WriteLine
-    let readfile = System.IO.File.ReadAllText
-    let equalto = equal
 
 type TestCliArguments =
     | [<Mandatory>] [<CustomAppSettings(OctopusServerAppSettings)>] OctopusServer of server:string
@@ -22,33 +17,52 @@ type TestCliArguments =
 
     interface IArgParserTemplate with
         member s.Usage = ""
-          
-let GetOctopusConfig (parsedResult :ParseResults<TestCliArguments>) = 
-    { 
-        Url = parsedResult.GetResult OctopusServer;
-        ApiKey = parsedResult.GetResult OctopusApiKey; 
-        ProjectName = parsedResult.GetResult OctopusProject
-    }
+
+type ``Connector``(output:ITestOutputHelper) =
+
+    let GetOctopusConfig (parsedResult :ParseResults<TestCliArguments>) = 
+                { 
+                    Url = parsedResult.GetResult OctopusServer;
+                    ApiKey = parsedResult.GetResult OctopusApiKey; 
+                    ProjectName = parsedResult.GetResult OctopusProject
+                }
+
+    let octopusConfig = 
+        let originalConfig = ParseResult<TestCliArguments>(true) |> GetOctopusConfig
+        {originalConfig with ProjectName = Guid.NewGuid().ToString().Substring(0, 8)} 
+
+    let UpdateVariableSet = OctopusConnector.UpdateVariableSet octopusConfig
+    do 
+        CreateProject octopusConfig |> ignore
+
+
+    [<Fact>]
+    let ``GetVariables should retrieve variables from octopus`` () =
+        UpdateVariableSet Map[ { Key = "newKey"; Scope  = None}, "NewValue";] 
+        GetVariableSet octopusConfig
+        |> should be (equal 
+            Map[
+                ({ Key = "newKey"; Scope = None }, "NewValue"); 
+            ])
+    [<Fact>]
+    let ``GetVariables should retrieve variables from octopus with scope`` () =
+        UpdateVariableSet Map[ { Key = "newKey"; Scope  = QA}, "NewValue";] 
+        GetVariableSet octopusConfig
+        |> should be (equal 
+            Map[
+                ({ Key = "newKey"; Scope = QA }, "NewValue"); 
+            ])
+
+    [<Fact>]
+    let ``UpdateVariable should modify octopus variable`` () =
+        UpdateVariableSet Map[ { Key = "newKey"; Scope  = None}, "NewValue";] 
+        UpdateVariableSet Map[ { Key = "newKey"; Scope  = None}, "AnotherNewValue";] 
+        GetVariableSet octopusConfig
+        |> should be (equal 
+            Map[
+                ({ Key = "newKey"; Scope = None }, "AnotherNewValue"); 
+            ])
 
 
 
-[<Fact>]
-let ``GetVariables should retrieve varoiables from octopus`` () =
-    ParseResult<TestCliArguments>(true) 
-    |> GetOctopusConfig 
-    |> OctopusConnector.GetVariableSet
-    |> should be (equal 
-        Map[
-            ({ Key = "fizz"; Scope = QA }, "buzz"); 
-            ({ Key = "fizz"; Scope = Prod }, "buzz"); 
-            ({ Key = "PREFIX_array__0__keyinside"; Scope = None }, "BOOM");
-            ({ Key = "PREFIX_key1"; Scope = None }, "value2"); 
-            ({ Key = "PREFIX_key2"; Scope = None }, "value2"); 
-            ({ Key = "PREFIX_key2"; Scope = Prod }, "value2"); 
-            ({ Key = "PREFIX_key2"; Scope = QA }, "value2"); 
-            ({ Key = "PREFIX_key3"; Scope = None }, "False"); 
-            ({ Key = "PREFIX_key5"; Scope = None }, "");
-            ({ Key = "PREFIX_key6"; Scope = None }, "5");
-            ({ Key = "PREFIX_key7"; Scope = None }, "1.5");
-        ])
 

@@ -53,7 +53,6 @@ let GetVariableSet octopusConfig =
             |> Seq.map(fun x -> getScopeByEnvironnmentId repo x )
             |> Seq.map(fun x -> {Key = variableResource.Name; Scope  = Some x}, variableResource.Value ;)
             |> Map.ofSeq
-
     (getVariableSet repo octopusConfig.ProjectName).Variables
     |> Seq.map convertToMap
     |> Seq.fold join Map.empty
@@ -72,3 +71,12 @@ let UpdateVariableSet octopusConfig (environnmentVariables :Map<ScopedKey, strin
         | None -> variableSet.AddOrUpdateVariableValue(key.Key, value)
     environnmentVariables |> Seq.iter(fun env -> addOrUpdateVariableValue env.Key env.Value |> ignore) 
     repo.VariableSets.Modify(variableSet) |> ignore
+
+let CreateProject octopusConfig =
+    let repo = getOctopusRepository octopusConfig
+    let projectResource = ProjectResource()
+    projectResource.Name <- octopusConfig.ProjectName
+    projectResource.ProjectGroupId <- "Default Project Group"
+    projectResource.LifecycleId <- "Default Lifecycle"
+    projectResource.IsDisabled <- false
+    repo.Projects.Create projectResource |> ignore
