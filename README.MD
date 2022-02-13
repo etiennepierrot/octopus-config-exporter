@@ -1,6 +1,12 @@
-# OCTOPUS CONFIG EXPORTER
+# Octopus Config Exporter
 
 [![CLI NuGet](https://img.shields.io/nuget/v/Octopus.Config.Exporter.Cli.svg?label=nuget.cli&color=royalblue)](https://www.nuget.org/packages/Octopus.Config.Exporter.Cli)
+
+## Why this tool?
+
+When you have to deal with a complex application settings, enter manually this variable into the the Octopus UI can be painful. Also mistake or bad copy paste can happen. This tool allow you to export your appsettings json variable into your octopus project.
+
+WARNING: if you are dealing with sensitive value like password, credentials. Don't put this value in your appsettings file (that maybe can be commited into your VCS), instead just put a placeholder value that you can replace later in the octopus UI.
 
 ## Prerequisites
 
