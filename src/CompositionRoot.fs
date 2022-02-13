@@ -1,31 +1,19 @@
 ﻿module CompositionRoot
-open Argu
 open CliAgurmentParser
-open OctocusVariableManager
 open VarJsonParser
 open OctopusConnector
 
+let Run (octopusConfig :OctopusConfig) (pathConfigFile :string) (prefix :option<string>) (scope :option<string>) = 
 
-let Run (parsedResult :ParseResults<CliArguments>) = 
-  let pathConfigFile = parsedResult.GetResult ConfigFile
-  let projectName = parsedResult.GetResult OctopusProject
-  let prefix = parsedResult.TryGetResult Prefix
-  let scope = parsedResult.TryGetResult Scope
-  let octopusConfig = 
-      { 
-        Url = parsedResult.GetResult OctopusServer;
-        ApiKey = parsedResult.GetResult OctopusApiKey; 
-      }
-
-  let updateOctopusVariables = OctopusConnector.UpdateVariableSet octopusConfig projectName
-  let getOctopusVariables = OctopusConnector.GetVariableSet octopusConfig
-  let ParseEnvironnmentVariablesFromFile = System.IO.File.ReadAllText >> (Parse prefix)
-  let environnmentVariables = ParseEnvironnmentVariablesFromFile pathConfigFile
-
-  let plan = Plan projectName environnmentVariables scope getOctopusVariables
-  let ApplyPlan plan = Apply plan projectName updateOctopusVariables
+  let updateOctopusVariables = OctopusConnector.UpdateVariableSet octopusConfig
+  let getOctopusVariables _ =  OctopusConnector.GetVariableSet octopusConfig
+    
+  let Plan = OctocusVariableManager.Plan scope getOctopusVariables
+  let Apply = OctocusVariableManager.Apply updateOctopusVariables
+  let ExtractChangesPlanFromFile = System.IO.File.ReadAllText >> (Parse prefix) >> Plan 
   
+  let plan = pathConfigFile |> ExtractChangesPlanFromFile
   DisplayPlan plan
-  AskApply (ApplyPlan) (plan)
+  AskApply (Apply) (plan)
 
 
