@@ -2,81 +2,60 @@
 open Octopus.Client
 open Octopus.Client.Model
 open OctocusVariableManager
-open System.Collections.Generic
 
 type OctopusConfig = { Url :string; ApiKey :string; ProjectName :string; }
 
-let getOctopusRepository octopusConfig = 
-    OctopusServerEndpoint(octopusConfig.Url, octopusConfig.ApiKey) 
-    |> OctopusRepository
+type OctopusWrapper(octopusConfig :OctopusConfig) =
 
-let memoize f =
-    let dict = Dictionary<_, _>();
-    fun c ->
-        let exist, value = dict.TryGetValue c
-        match exist with
-        | true -> value
-        | _ -> 
-            let value = f c
-            dict.Add(c, value)
-            value
+    let findEnvironnment = Helper.Memoize (fun (repo :OctopusRepository )->  repo.Environments.FindAll() |> Seq.toList )
+    let mutable octopusConfig = octopusConfig
 
-let findEnvironnment (repo :OctopusRepository) = 
-    repo.Environments.FindAll()
+    let repo =  OctopusServerEndpoint(octopusConfig.Url, octopusConfig.ApiKey) |> OctopusRepository
 
-let memoFindEnvironnment = memoize findEnvironnment
+    member private this.getVariableSet projectName = 
+        let projectResource = repo.Projects.FindByName projectName
+        repo.VariableSets.Get projectResource.VariableSetId 
 
-let getVariableSet (repo :OctopusRepository) (projectName :string) = 
-    projectName 
-    |> ( repo.Projects.FindByName
-        >> (fun p -> repo.VariableSets.Get(p.VariableSetId)))
-
-let getEnvironnmentByScope (repo :OctopusRepository) (scope :string) =
-    memoFindEnvironnment repo
-    |> Seq.toList 
-    |> List.find(fun e -> e.Name = scope)
-
-let getScopeByEnvironnmentId (repo :OctopusRepository) (environnementId :string) =
-    (memoFindEnvironnment repo
-    |> Seq.toList 
-    |> List.find(fun e -> e.Id = environnementId)).Name
-
-let GetVariableSet octopusConfig = 
-    let repo = getOctopusRepository octopusConfig 
-    let join (p:Map<'a,'b>) (q:Map<'a,'b>) = 
-        Map(Seq.concat [ (Map.toSeq p) ; (Map.toSeq q) ])
-    let convertToMap (variableResource :VariableResource) :  Map<ScopedKey, string> =
-        if variableResource.Scope.Count = 0 then
-            Map [{Key = variableResource.Name; Scope  = None}, variableResource.Value ;  ]
-        else
-            variableResource.Scope[ScopeField.Environment]
-            |> Seq.map(fun x -> getScopeByEnvironnmentId repo x )
-            |> Seq.map(fun x -> {Key = variableResource.Name; Scope  = Some x}, variableResource.Value ;)
-            |> Map.ofSeq
-    (getVariableSet repo octopusConfig.ProjectName).Variables
-    |> Seq.map convertToMap
-    |> Seq.fold join Map.empty
-
-let UpdateVariableSet octopusConfig (environnmentVariables :Map<ScopedKey, string>) =
-    let repo = getOctopusRepository octopusConfig
-    let variableSet = getVariableSet repo octopusConfig.ProjectName
-    let scope (s :string) = 
+    member private this.getOctopusScopeSpecification (scope :string) =
+        let scopeValue =  (repo 
+                            |> findEnvironnment
+                            |> List.find(fun e -> e.Name = scope)).Id
+                            |> ScopeValue
         let scope = new ScopeSpecification()
-        let env = getEnvironnmentByScope repo s
-        scope.Add( ScopeField.Environment, new ScopeValue(env.Id) ) 
+        scope.Add( ScopeField.Environment, scopeValue ) 
         scope
-    let addOrUpdateVariableValue (key :ScopedKey) (value :string) =
-        match key.Scope with
-        | Some s -> variableSet.AddOrUpdateVariableValue(key.Key, value, scope s) 
-        | None -> variableSet.AddOrUpdateVariableValue(key.Key, value)
-    environnmentVariables |> Seq.iter(fun env -> addOrUpdateVariableValue env.Key env.Value |> ignore) 
-    repo.VariableSets.Modify(variableSet) |> ignore
 
-let CreateProject octopusConfig =
-    let repo = getOctopusRepository octopusConfig
-    let projectResource = ProjectResource()
-    projectResource.Name <- octopusConfig.ProjectName
-    projectResource.ProjectGroupId <- "Default Project Group"
-    projectResource.LifecycleId <- "Default Lifecycle"
-    projectResource.IsDisabled <- false
-    repo.Projects.Create projectResource |> ignore
+    member private this.getScopeByEnvironnmentId (environnementId :string) =
+        (repo 
+        |> findEnvironnment
+        |> List.find(fun (e :EnvironmentResource) ->  e.Id = environnementId)).Name
+
+
+    member this.GetVariableSet = 
+        let convertToMap (variableResource :VariableResource) :  Map<ScopedKey, string> =
+            if variableResource.Scope.Count = 0 then
+                Map [{Key = variableResource.Name; Scope  = None}, variableResource.Value ;  ]
+            else
+                variableResource.Scope[ScopeField.Environment]
+                |> Seq.map(fun x -> {Key = variableResource.Name; Scope  = Some (this.getScopeByEnvironnmentId x)}, variableResource.Value ;)
+                |> Map.ofSeq
+        (this.getVariableSet octopusConfig.ProjectName).Variables
+                |> Seq.map convertToMap
+                |> Seq.fold Helper.Join Map.empty
+                
+    member this.UpdateVariableSet (environnmentVariables :Map<ScopedKey, string>) =
+        let variableSet = this.getVariableSet octopusConfig.ProjectName
+        let addOrUpdateVariableValue (key :ScopedKey) (value :string) =
+            match key.Scope with
+            | Some s -> variableSet.AddOrUpdateVariableValue(key.Key, value, this.getOctopusScopeSpecification s) 
+            | None -> variableSet.AddOrUpdateVariableValue(key.Key, value)
+        environnmentVariables |> Seq.iter(fun env -> addOrUpdateVariableValue env.Key env.Value |> ignore) 
+        repo.VariableSets.Modify(variableSet) |> ignore
+
+    member this.CreateProject octopusConfig =
+        let projectResource = ProjectResource()
+        projectResource.Name <- octopusConfig.ProjectName
+        projectResource.ProjectGroupId <- "ProjectGroups-1"
+        projectResource.LifecycleId <- "Default Lifecycle"
+        projectResource.IsDisabled <- false
+        repo.Projects.Create projectResource |> ignore

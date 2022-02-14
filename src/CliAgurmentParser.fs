@@ -84,7 +84,7 @@ let ParseArgs (exec : OctopusConfig -> string -> option<string> -> option<string
         -1
 
 
-let DisplayPlan plan= 
+let DisplayPlan plan = 
     let display (key :ScopedKey)  (change :Change) = 
         match key.Scope with
         | Some scope ->  match change with 
@@ -103,13 +103,17 @@ let DisplayPlan plan=
     |> Map.iter (fun k v -> printfn "%s" v)
 
 
-let rec AskApply (apply : 'a -> unit) plan = 
-    printfn "Do you want to apply theses changes? (Y/n)"
-    let answer  = Console.ReadKey()
-    printfn ""  
-    match answer.KeyChar with
-    | 'Y' ->  
-        apply plan
+let rec AskApply (apply : (Map<ScopedKey, Change>) -> unit) (plan :Map<ScopedKey, Change>) = 
+    if plan.IsEmpty then
+        printfn "No changes to apply"
         0
-    | 'n' -> 0
-    | _   -> AskApply apply plan
+    else  
+        printfn "Do you want to apply theses changes? (Y/n)"
+        let answer  = Console.ReadKey()
+        printfn ""  
+        match answer.KeyChar with
+        | 'Y' ->  
+            apply plan
+            0
+        | 'n' -> 0
+        | _   -> AskApply apply plan

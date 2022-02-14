@@ -6,9 +6,9 @@ open CliAgurmentParser
 open Argu
 open OctopusConnector
 open OctocusVariableManager
-open Helper
+open TestHelper
 open System
-
+open OctopusConnector
 
 type TestCliArguments =
     | [<Mandatory>] [<CustomAppSettings(OctopusServerAppSettings)>] OctopusServer of server:string
@@ -20,34 +20,31 @@ type TestCliArguments =
 
 type ``Connector``(output:ITestOutputHelper) =
 
-    let GetOctopusConfig (parsedResult :ParseResults<TestCliArguments>) = 
+    let getOctopusConfig (parsedResult :ParseResults<TestCliArguments>) = 
                 { 
                     Url = parsedResult.GetResult OctopusServer;
                     ApiKey = parsedResult.GetResult OctopusApiKey; 
                     ProjectName = parsedResult.GetResult OctopusProject
                 }
-
-    let octopusConfig = 
-        let originalConfig = ParseResult<TestCliArguments>(true) |> GetOctopusConfig
-        {originalConfig with ProjectName = Guid.NewGuid().ToString().Substring(0, 8)} 
-
-    let UpdateVariableSet = OctopusConnector.UpdateVariableSet octopusConfig
+    let originalConfig = ParseResult<TestCliArguments>(true) |> getOctopusConfig
+    let testConfig = {originalConfig with ProjectName = Guid.NewGuid().ToString().Substring(0, 8)}
+    
+    let octopusWrapper = new OctopusWrapper(testConfig)
     do 
-        CreateProject octopusConfig |> ignore
-
+        octopusWrapper.CreateProject testConfig
 
     [<Fact>]
     let ``GetVariables should retrieve variables from octopus`` () =
-        UpdateVariableSet Map[ { Key = "newKey"; Scope  = None}, "NewValue";] 
-        GetVariableSet octopusConfig
-        |> should be (equal 
+        octopusWrapper.UpdateVariableSet Map[ { Key = "newKey"; Scope  = None}, "NewValue";] 
+        octopusWrapper.GetVariableSet 
+            |> should be (equal 
             Map[
                 ({ Key = "newKey"; Scope = None }, "NewValue"); 
             ])
     [<Fact>]
     let ``GetVariables should retrieve variables from octopus with scope`` () =
-        UpdateVariableSet Map[ { Key = "newKey"; Scope  = QA}, "NewValue";] 
-        GetVariableSet octopusConfig
+        octopusWrapper.UpdateVariableSet Map[ { Key = "newKey"; Scope  = QA}, "NewValue";] 
+        octopusWrapper.GetVariableSet 
         |> should be (equal 
             Map[
                 ({ Key = "newKey"; Scope = QA }, "NewValue"); 
@@ -55,9 +52,9 @@ type ``Connector``(output:ITestOutputHelper) =
 
     [<Fact>]
     let ``UpdateVariable should modify octopus variable`` () =
-        UpdateVariableSet Map[ { Key = "newKey"; Scope  = None}, "NewValue";] 
-        UpdateVariableSet Map[ { Key = "newKey"; Scope  = None}, "AnotherNewValue";] 
-        GetVariableSet octopusConfig
+        octopusWrapper.UpdateVariableSet Map[ { Key = "newKey"; Scope  = None}, "NewValue";] 
+        octopusWrapper.UpdateVariableSet Map[ { Key = "newKey"; Scope  = None}, "AnotherNewValue";] 
+        octopusWrapper.GetVariableSet 
         |> should be (equal 
             Map[
                 ({ Key = "newKey"; Scope = None }, "AnotherNewValue"); 
