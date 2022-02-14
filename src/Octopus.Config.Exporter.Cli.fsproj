@@ -5,6 +5,12 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>octopus-config-exporter</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
+    <Authors>Etienne Pierrot</Authors>
+    <PackageTags>Octopus;json;config;exporter;cli;tool;</PackageTags>
+    <ProjectUrl>https://github.com/etiennepierrot/octopus-config-exporter</ProjectUrl>
+    <Description>
+      When you have to deal with a complex application settings, enter manually this variable into the the Octopus UI can be painful. Also mistake or bad copy paste can happen. This tool allow you to export your appsettings json variable into your octopus project.
+    </Description>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Helper.fs" />
