@@ -7,19 +7,19 @@ open TestHelper
 
 let equalto = equal
 
-let mutable MockOctopusVariables = Map[
-                                    {Key = "fizz"; Scope  = None}, "buzz" ;  
-                                    {Key = "fizz2"; Scope  = None}, "newbuzz";  
-                                    {Key = "fizz2"; Scope  = QA}, "newbuzz-QA";  
-                                    ]
-
-let GetVariableSet _ = MockOctopusVariables 
-let UpdateVariableSet (environnmentVariables :Map<ScopedKey, string>) = 
-    let update key value = MockOctopusVariables <- (MockOctopusVariables |> Map.change key  (fun _ -> Some value) )    
-    environnmentVariables |> Map.iter update
 
 type``Plan should``(output:ITestOutputHelper) =
 
+    let mutable MockOctopusVariables = Map[
+                                        {Key = "fizz"; Scope  = None}, "buzz" ;  
+                                        {Key = "fizz2"; Scope  = None}, "newbuzz";  
+                                        {Key = "fizz2"; Scope  = QA}, "newbuzz-QA";  
+                                        ]
+
+    let GetVariableSet _ = MockOctopusVariables 
+    let UpdateVariableSet (environnmentVariables :Map<ScopedKey, string>) = 
+        let update key value = MockOctopusVariables <- (MockOctopusVariables |> Map.change key  (fun _ -> Some value) )    
+        environnmentVariables |> Map.iter update
     let Plan = OctocusVariableManager.Plan None GetVariableSet
     
     [<Fact>]
@@ -38,11 +38,21 @@ type``Plan should``(output:ITestOutputHelper) =
         ]))
 
 type``Apply should``(output:ITestOutputHelper) =
-        
+    let mutable MockOctopusVariables = Map[
+                                        {Key = "fizz"; Scope  = None}, "buzz" ;  
+                                        {Key = "fizz2"; Scope  = None}, "newbuzz";  
+                                        {Key = "fizz2"; Scope  = QA}, "newbuzz-QA";  
+                                        ]
+
+    let GetVariableSet _ = MockOctopusVariables 
+    let UpdateVariableSet (environnmentVariables :Map<ScopedKey, string>) = 
+        let update key value = MockOctopusVariables <- (MockOctopusVariables |> Map.change key  (fun _ -> Some value) )    
+        environnmentVariables |> Map.iter update
+
     let getValue (key :ScopedKey) =  
         GetProjectEnvironnmentVariables GetVariableSet
-                       |> Seq.find(fun (k, _) -> k =  key) 
-                       |> snd 
+        |> Seq.find(fun (k, _) -> k =  key) 
+        |> snd 
 
     let Apply = OctocusVariableManager.Apply UpdateVariableSet
 
@@ -52,4 +62,3 @@ type``Apply should``(output:ITestOutputHelper) =
         |> Apply
         getValue {Key =  "fizz2"; Scope = None; }
         |> should be (equalto "anotherbuzz")
-   
