@@ -16,7 +16,6 @@ let Run (octopusConfig :OctopusConfig) (pathConfigFile :string) (prefix :option<
                                     >> Plan 
   
   let plan = pathConfigFile |> ExtractChangesPlanFromFile
-  DisplayPlan plan
-  AskApply (Apply) (plan)
+  AskApply Apply plan
 
 

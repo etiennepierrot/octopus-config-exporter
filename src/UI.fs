@@ -18,7 +18,8 @@ let DisplayPlan plan =
 
     plan 
     |> Map.map display 
-    |> Map.iter (fun k v -> printfn "%s" v)
+    |> Map.toSeq
+    |> Seq.map (fun (_, v ) -> sprintf "%s" v  )
 
 
 let rec AskApply (apply : (Map<ScopedKey, Change>) -> unit) (plan :Map<ScopedKey, Change>) = 
@@ -26,6 +27,8 @@ let rec AskApply (apply : (Map<ScopedKey, Change>) -> unit) (plan :Map<ScopedKey
         printfn "No changes to apply"
         0
     else  
+        DisplayPlan plan
+        |> Seq.iter (printfn "%s")
         printfn "Do you want to apply theses changes? (Y/n)"
         let answer  = Console.ReadKey()
         printfn ""  
