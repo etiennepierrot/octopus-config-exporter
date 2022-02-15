@@ -8,7 +8,6 @@ open OctopusConnector
 open OctocusVariableManager
 open TestHelper
 open System
-open OctopusConnector
 
 type TestCliArguments =
     | [<Mandatory>] [<CustomAppSettings(OctopusServerAppSettings)>] OctopusServer of server:string
@@ -26,11 +25,21 @@ type ``Connector``(output:ITestOutputHelper) =
                     ApiKey = parsedResult.GetResult OctopusApiKey; 
                     ProjectName = parsedResult.GetResult OctopusProject
                 }
+
+    let environnmentVariables = System.Environment.GetEnvironmentVariables()
+                                |> Seq.cast<System.Collections.DictionaryEntry>
+                                |> Seq.map (fun d -> d.Key :?> string, d.Value :?> string)
+                                |> dict
+    let testOctopusApiSet = environnmentVariables.ContainsKey OctopusApiKeyAppSettings 
+                                && environnmentVariables[OctopusApiKeyAppSettings].StartsWith "API-"
+
     let originalConfig = ParseResult<TestCliArguments>(true) |> getOctopusConfig
     let testConfig = {originalConfig with ProjectName = Guid.NewGuid().ToString().Substring(0, 8)}
     
     let octopusWrapper = new OctopusWrapper(testConfig)
     do 
+        if testOctopusApiSet then printfn "OCTOPUS_API_KEY setup"
+        else failwith "OCTOPUS_API_KEY not setup"
         octopusWrapper.CreateProject testConfig
 
     [<Fact>]
