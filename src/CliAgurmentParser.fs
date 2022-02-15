@@ -1,7 +1,5 @@
 ﻿module CliAgurmentParser
 open Argu
-open OctocusVariableManager
-open System
 open DotNetConfig
 open System.Collections.Generic
 open OctopusConnector
