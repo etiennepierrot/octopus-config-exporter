@@ -17,7 +17,20 @@ type TestCliArguments =
     interface IArgParserTemplate with
         member s.Usage = ""
 
+let checkOctopusKey _ = 
+    let environnmentVariables = System.Environment.GetEnvironmentVariables()
+                                |> Seq.cast<System.Collections.DictionaryEntry>
+                                |> Seq.map (fun d -> d.Key :?> string, d.Value :?> string)
+                                |> dict
+    environnmentVariables.ContainsKey OctopusApiKeyAppSettings 
+    && environnmentVariables[OctopusApiKeyAppSettings].StartsWith "API-"
+
 type ``Connector``(output:ITestOutputHelper) =
+
+    do 
+        if checkOctopusKey() 
+        then printfn "OCTOPUS_API_KEY setup"
+        else failwith "OCTOPUS_API_KEY not setup"
 
     let getOctopusConfig (parsedResult :ParseResults<TestCliArguments>) = 
                 { 
@@ -26,20 +39,13 @@ type ``Connector``(output:ITestOutputHelper) =
                     ProjectName = parsedResult.GetResult OctopusProject
                 }
 
-    let environnmentVariables = System.Environment.GetEnvironmentVariables()
-                                |> Seq.cast<System.Collections.DictionaryEntry>
-                                |> Seq.map (fun d -> d.Key :?> string, d.Value :?> string)
-                                |> dict
-    let testOctopusApiSet = environnmentVariables.ContainsKey OctopusApiKeyAppSettings 
-                                && environnmentVariables[OctopusApiKeyAppSettings].StartsWith "API-"
+
 
     let originalConfig = ParseResult<TestCliArguments>(true) |> getOctopusConfig
     let testConfig = {originalConfig with ProjectName = Guid.NewGuid().ToString().Substring(0, 8)}
     
     let octopusWrapper = new OctopusWrapper(testConfig)
     do 
-        if testOctopusApiSet then printfn "OCTOPUS_API_KEY setup"
-        else failwith "OCTOPUS_API_KEY not setup"
         octopusWrapper.CreateProject testConfig
 
     [<Fact>]
