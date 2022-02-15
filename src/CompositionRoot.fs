@@ -11,7 +11,9 @@ let Run (octopusConfig :OctopusConfig) (pathConfigFile :string) (prefix :option<
     
   let Plan = OctocusVariableManager.Plan scope getOctopusVariables
   let Apply = OctocusVariableManager.Apply updateOctopusVariables
-  let ExtractChangesPlanFromFile = System.IO.File.ReadAllText >> (Parse prefix) >> Plan 
+  let ExtractChangesPlanFromFile = System.IO.File.ReadAllText 
+                                    >> Parse prefix
+                                    >> Plan 
   
   let plan = pathConfigFile |> ExtractChangesPlanFromFile
   DisplayPlan plan
