@@ -1,7 +1,7 @@
 ﻿module CompositionRoot
-open CliAgurmentParser
 open VarJsonParser
 open OctopusConnector
+open UI
 
 let Run (octopusConfig :OctopusConfig) (pathConfigFile :string) (prefix :option<string>) (scope :option<string>) = 
 

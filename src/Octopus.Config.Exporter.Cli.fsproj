@@ -19,6 +19,7 @@
     <Compile Include="OctocusVariableManager.fs" />
     <Compile Include="OctopusConnector.fs" />
     <Compile Include="CliAgurmentParser.fs" />
+    <Compile Include="UI.fs" />
     <Compile Include="CompositionRoot.fs" />
     <Compile Include="Program.fs" />
     <None Include="../README.MD" Pack="true" PackagePath="\"/>
