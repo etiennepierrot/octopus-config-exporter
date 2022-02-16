@@ -25,6 +25,7 @@ let checkOctopusKey _ =
     environnmentVariables.ContainsKey OctopusApiKeyAppSettings 
     && environnmentVariables[OctopusApiKeyAppSettings].StartsWith "API-"
 
+[<Trait("Category","Integration")>]
 type ``Connector``(output:ITestOutputHelper) =
 
     do 

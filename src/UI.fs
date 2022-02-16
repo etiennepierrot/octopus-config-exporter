@@ -3,24 +3,32 @@ open OctocusVariableManager
 open System
 
 let DisplayPlan plan = 
-    let display (key :ScopedKey)  (change :Change) = 
-        match key.Scope with
-        | Some scope ->  match change with 
-                                        | Modify mv -> sprintf "Modified variable %s from %s to %s in %s environnement" 
-                                                                key.Key mv.OldValue mv.NewValue scope
-                                        | New s -> sprintf "New variable %s with %s in %s environnement" 
-                                                            key.Key s scope
-        | None ->  match change with 
-                                        | Modify mv -> sprintf "Modified variable %s from %s to %s" 
-                                                                key.Key mv.OldValue mv.NewValue
-                                        | New s -> sprintf "New variable %s with %s" 
-                                                            key.Key s
+    let display (scopedKey :ScopedKey)  (change :Change) = 
+        let displayValue (value :Value) =
+            let isSensitive = ["password"; "credential"]  
+                                |> List.map scopedKey.Key.Contains
+                                |> List.reduce (||)
+            if isSensitive
+            then 
+                "**********"
+            else
+                sprintf "%s" value
 
+        let printNewVariable newVariable :Value = sprintf "New variable %s with %s" scopedKey.Key (newVariable |> displayValue)
+        let printModifiedVariable (modifiedVariable :ModifyVariable) = sprintf "Modified variable %s from %s to %s"
+                                                                        scopedKey.Key 
+                                                                        (modifiedVariable.OldValue |> displayValue) 
+                                                                        (modifiedVariable.NewValue |> displayValue)
+        
+        match (scopedKey.Scope, change ) with
+        | (Some scope, New n) ->  sprintf "%s in %s environnement" (printNewVariable n) scope
+        | (None, New n)       ->  printNewVariable n
+        | (None, Modify modify )        -> printModifiedVariable modify
+        | (Some scope, Modify modify )  ->  sprintf "%s in %s environnement" (printModifiedVariable modify) scope
     plan 
     |> Map.map display 
     |> Map.toSeq
     |> Seq.map (fun (_, v ) -> sprintf "%s" v  )
-
 
 let rec AskApply (apply : (Map<ScopedKey, Change>) -> unit) (plan :Map<ScopedKey, Change>) = 
     if plan.IsEmpty then

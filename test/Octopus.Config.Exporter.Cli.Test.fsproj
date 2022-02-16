@@ -5,6 +5,7 @@
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="UITest.fs" />
     <Compile Include="../src/Helper.fs" />
     <Compile Include="Helper.fs" />
     <Compile Include="OctocusVariableManagerTest.fs" />

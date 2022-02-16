@@ -10,11 +10,13 @@ let equalto = equal
 
 type``Display should``(output:ITestOutputHelper) =
 
-    [<Fact>]
-    let ``hide sensitive data`` () =
+    [<Theory>]
+    [<InlineData("password_super_secure")>]
+    [<InlineData("credential")>]
+    let ``hide sensitive data`` (keyName) =
         DisplayPlan Map[
                         { Key = "fizz"; Scope  = None}, Modify { OldValue = "old_buzz"; NewValue = "new_buzz"};
-                        { Key = "password_super_secure"; Scope  = None}, Modify { OldValue = "HYPERSENTIVE DATA"; NewValue = "ANOTHER HYPERSENTIVE DATA"};
+                        { Key = keyName; Scope  = None}, Modify { OldValue = "HYPERSENTIVE DATA"; NewValue = "ANOTHER HYPERSENTIVE DATA"};
                         ]
         |> Seq.fold (+) ""
         |> (fun s ->  not (s.Contains("HYPERSENTIVE DATA")) || not (s.Contains("ANOTHER HYPERSENTIVE DATA")) )
