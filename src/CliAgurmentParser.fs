@@ -27,6 +27,7 @@ type CliArguments =
     | [<Mandatory>] [<CustomAppSettings(OctopusProjectNameAppSettings)>] OctopusProject of projectName:string
     | [<CustomAppSettings(OctopusPrefix)>] Prefix of prefix:string
     | Scope of prefix:string
+    | NoSecure
 
     interface IArgParserTemplate with
         member s.Usage =
@@ -37,6 +38,7 @@ type CliArguments =
             | OctopusProject _ -> sprintf "specify the project name (can also be set with %s environnment variable)" OctopusProjectNameAppSettings
             | Prefix _ -> sprintf "specify the prefix of Env Var (can also be set with %s environnment variable)" OctopusPrefix
             | Scope _ -> "scope for applying config"
+            | NoSecure _ -> "display sensitive data"
 
 let GetOctopusConfig (parsedResult :ParseResults<CliArguments>) = 
     { 
@@ -65,10 +67,9 @@ let ParseResult<'a when 'a :> IArgParserTemplate> ignoreUnrecognized   =
     ArgumentParser.Create<'a>().Parse(
         configurationReader= (ConfigurationReader.FromFunction functionReader),
         ignoreUnrecognized = ignoreUnrecognized 
-
         )
 
-let ParseArgs (exec : OctopusConfig -> string -> option<string> -> option<string> -> int )  =
+let ParseArgs (exec : OctopusConfig -> string -> option<string> -> option<string> -> bool -> int )  =
     
     try
         let parsedResult = ParseResult(false)
@@ -76,7 +77,9 @@ let ParseArgs (exec : OctopusConfig -> string -> option<string> -> option<string
         let pathConfigFile = parsedResult.GetResult ConfigFile
         let prefix = parsedResult.TryGetResult Prefix
         let scope = parsedResult.TryGetResult Scope
-        exec octopusConfig pathConfigFile prefix scope
+        match parsedResult.TryGetResult NoSecure with
+        | Some _ -> exec octopusConfig pathConfigFile prefix scope true
+        | None -> exec octopusConfig pathConfigFile prefix scope false
     with e ->
         printfn "%s" e.Message
         -1

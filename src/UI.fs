@@ -2,24 +2,29 @@ module UI
 open OctocusVariableManager
 open System
 
-let DisplayPlan plan = 
-    let display (scopedKey :ScopedKey)  (change :Change) = 
-        let displayValue (value :Value) =
-            let isSensitive = ["password"; "credential"]  
+let RedactSensitiveData (map :Map<ScopedKey, Change>) : Map<ScopedKey, Change> = 
+    let redactChange = function
+                        | Modify _ -> { OldValue= "***REDACTED***"; NewValue = "***REDACTED***" } |> Modify
+                        | New _ -> "***REDACTED***" |> New
+    let redact (scopedKey :ScopedKey) (change :Change) = 
+        let isSensitive = ["password"; "credential"]  
                                 |> List.map scopedKey.Key.Contains
                                 |> List.reduce (||)
-            if isSensitive
-            then 
-                "**********"
-            else
-                sprintf "%s" value
+        if isSensitive
+        then 
+            redactChange change
+        else
+            change
+    map |> Map.map redact
 
-        let printNewVariable newVariable :Value = sprintf "New variable %s with %s" scopedKey.Key (newVariable |> displayValue)
+let DisplayPlan plan = 
+    let display (scopedKey :ScopedKey) (change :Change) = 
+        let printNewVariable (newVariable :Value) = sprintf "New variable %s with %s" scopedKey.Key newVariable
         let printModifiedVariable (modifiedVariable :ModifyVariable) = sprintf "Modified variable %s from %s to %s"
                                                                         scopedKey.Key 
-                                                                        (modifiedVariable.OldValue |> displayValue) 
-                                                                        (modifiedVariable.NewValue |> displayValue)
-        
+                                                                        modifiedVariable.OldValue 
+                                                                        modifiedVariable.NewValue
+    
         match (scopedKey.Scope, change ) with
         | (Some scope, New n) ->  sprintf "%s in %s environnement" (printNewVariable n) scope
         | (None, New n)       ->  printNewVariable n

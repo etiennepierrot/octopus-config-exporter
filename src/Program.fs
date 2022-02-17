@@ -1,3 +1,4 @@
 ﻿[<EntryPoint>]
 let main(args) = 
-    CompositionRoot.Run |> CliAgurmentParser.ParseArgs 
+    CompositionRoot.Run 
+    |> CliAgurmentParser.ParseArgs 
