@@ -10,7 +10,7 @@ type OctopusWrapper(octopusConfig :OctopusConfig) =
     let findEnvironnment = Helper.Memoize (fun (repo :OctopusRepository )->  repo.Environments.FindAll() |> Seq.toList )
     let mutable octopusConfig = octopusConfig
 
-    let repo =  OctopusServerEndpoint(octopusConfig.Url, octopusConfig.ApiKey) |> OctopusRepository
+    let repo = OctopusServerEndpoint(octopusConfig.Url, octopusConfig.ApiKey) |> OctopusRepository
 
     member private this.getVariableSet projectName = 
         let projectResource = repo.Projects.FindByName projectName
