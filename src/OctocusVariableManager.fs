@@ -1,19 +1,18 @@
 ﻿module OctocusVariableManager
 
 type ScopedKey = { Key :string; Scope :Option<string> }
-
+type Value = string
 type ModifyVariable = 
     {
-        OldValue :string
-        NewValue :string
+        OldValue :Value
+        NewValue :Value
     }
-
 type Change =
     | Modify of ModifyVariable
-    | New of string
+    | New of Value    
 
 
-let Plan (scope :Option<string>) (getVariableSet :unit ->  Map<ScopedKey, string>) (environnmentVariables :Map<string, string>) =
+let Plan (scope :Option<string>) (getVariableSet :unit ->  Map<ScopedKey, string>) (environnmentVariables :Map<string, string>) = 
     let variableSet = getVariableSet()
     let scopedKey key = {Key = key; Scope = scope;}
     let filterVariableSet key value =

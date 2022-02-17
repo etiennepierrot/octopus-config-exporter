@@ -21,8 +21,9 @@ dotnet tool install --global Octopus.Config.Exporter.Cli
 ## How to use it
 
 ```bash
- USAGE: octopus-config-exporter [--help] --octopusserver <server> --octopusapikey <apiKey> --octopusproject <projectName>
-                                   [--prefix <prefix>] [--scope <prefix>] <path>
+ USAGE: octopus-config-exporter [--help] --octopusserver <server> --octopusapikey <apiKey>
+                                --octopusproject <projectName> [--prefix <prefix>] [--scope <prefix>]
+                                [--nosecure] <path>
 
 CONFIGFILE:
 
@@ -31,14 +32,17 @@ CONFIGFILE:
 OPTIONS:
 
     --octopusserver <server>
-                          specify a the address of the octopus server (can also be set with OCTOPUS_SERVER environnment
-                          variable)
+                          specify a the address of the octopus server (can also be set with OCTOPUS_SERVER
+                          environnment variable)
     --octopusapikey <apiKey>
                           specify your api key (can also be set with OCTOPUS_API_KEY environnment variable)
     --octopusproject <projectName>
-                          specify the project name (can also be set with OCTOPUS_PROJECT_NAME environnment variable)
-    --prefix <prefix>     specify the prefix of Env Var (can also be set with OCTOPUS_PREFIX environnment variable)
+                          specify the project name (can also be set with OCTOPUS_PROJECT_NAME environnment
+                          variable)
+    --prefix <prefix>     specify the prefix of Env Var (can also be set with OCTOPUS_PREFIX environnment
+                          variable)
     --scope <prefix>      scope for applying config
+    --nosecure            display sensitive data
     --help                display this list of options.
 ```
 
