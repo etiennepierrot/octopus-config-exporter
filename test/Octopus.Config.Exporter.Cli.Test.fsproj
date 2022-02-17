@@ -8,7 +8,7 @@
     <Compile Include="UITest.fs" />
     <Compile Include="../src/Helper.fs" />
     <Compile Include="Helper.fs" />
-    <Compile Include="OctocusVariableManagerTest.fs" />
+    <Compile Include="OctopusVariableManagerTest.fs" />
     <Compile Include="OctopusConnectorTest.fs" />
     <Compile Include="VarJsonParser.fs" />
     <Compile Include="Program.fs" />
