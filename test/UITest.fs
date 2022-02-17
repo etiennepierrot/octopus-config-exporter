@@ -14,11 +14,13 @@ type``Display should``(output:ITestOutputHelper) =
     [<InlineData("password_super_secure")>]
     [<InlineData("credential")>]
     let ``hide sensitive data`` (keyName) =
-        DisplayPlan Map[
-                        { Key = "fizz"; Scope  = None}, Modify { OldValue = "old_buzz"; NewValue = "new_buzz"};
-                        { Key = keyName; Scope  = None}, Modify { OldValue = "HYPERSENTIVE DATA"; NewValue = "ANOTHER HYPERSENTIVE DATA"};
-                        ]
+        Map[
+            { Key = "fizz"; Scope  = None}, Modify { OldValue = "old_buzz"; NewValue = "new_buzz"};
+            { Key = keyName; Scope  = None}, Modify { OldValue = "HYPERSENTIVE DATA"; NewValue = "ANOTHER HYPERSENTIVE DATA"};
+        ]
+        |> RedactSensitiveData
+        |> DisplayPlan
         |> Seq.fold (+) ""
         |> (fun s ->  not (s.Contains("HYPERSENTIVE DATA")) || not (s.Contains("ANOTHER HYPERSENTIVE DATA")) )
-        |>  should equalto true
-    
+        |> should equalto true
+        
