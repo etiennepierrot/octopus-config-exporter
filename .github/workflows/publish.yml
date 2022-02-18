@@ -30,4 +30,5 @@ jobs:
         TAG_FORMAT: '*'
         NUGET_KEY: ${{secrets.NUGET_KEY}}
         VERSION_STATIC: ${{ steps.version.outputs.version }}
+        INCLUDE_SYMBOLS: true
 
