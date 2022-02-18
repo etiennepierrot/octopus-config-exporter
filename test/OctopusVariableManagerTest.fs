@@ -1,4 +1,4 @@
-﻿module OctocusVariableManagerTest
+﻿module OctopusVariableManagerTest
 open FsUnit
 open OctocusVariableManager
 open Xunit

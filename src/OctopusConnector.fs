@@ -1,4 +1,5 @@
 ﻿module OctopusConnector
+open System
 open Octopus.Client
 open Octopus.Client.Model
 open OctocusVariableManager
@@ -59,3 +60,9 @@ type OctopusWrapper(octopusConfig :OctopusConfig) =
         projectResource.LifecycleId <- "Default Lifecycle"
         projectResource.IsDisabled <- false
         repo.Projects.Create projectResource |> ignore
+        
+    member this.CreateKey username password =
+        repo.Users.SignIn(username, password)
+        let user = repo.Users.GetCurrent()
+        let apiKey = repo.Users.CreateApiKey(user)
+        apiKey.ApiKey

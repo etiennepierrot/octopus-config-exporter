@@ -9,6 +9,8 @@ open OctocusVariableManager
 open TestHelper
 open System
 
+
+
 type TestCliArguments =
     | [<Mandatory>] [<CustomAppSettings(OctopusServerAppSettings)>] OctopusServer of server:string
     | [<Mandatory>] [<CustomAppSettings(OctopusApiKeyAppSettings)>] OctopusApiKey of apiKey:string
@@ -16,23 +18,29 @@ type TestCliArguments =
 
     interface IArgParserTemplate with
         member s.Usage = ""
+ 
+ let 
 
 [<Trait("Category","Integration")>]
 type ``Connector``(output:ITestOutputHelper) =
 
+    let mutable octopusConfig
     let getOctopusConfig (parsedResult :ParseResults<TestCliArguments>) = 
                 { 
                     Url = parsedResult.GetResult OctopusServer;
                     ApiKey = parsedResult.GetResult OctopusApiKey; 
                     ProjectName = parsedResult.GetResult OctopusProject
                 }
+                
 
     let originalConfig = ParseResult<TestCliArguments>(true) |> getOctopusConfig
     let testConfig = {originalConfig with ProjectName = Guid.NewGuid().ToString().Substring(0, 8)}
     
     let octopusWrapper = new OctopusWrapper(testConfig)
-    do 
-        octopusWrapper.CreateProject testConfig
+    do
+        let apiKey = octopusWrapper.CreateKey "admin" "Password01!"
+        let testConfig = {originalConfig with ApiKey = apiKey}
+        octopusWrapper.CreateProject testConfig 
 
     [<Fact>]
     let ``GetVariables should retrieve variables from octopus`` () =
