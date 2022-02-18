@@ -13,6 +13,9 @@
     <Compile Include="VarJsonParser.fs" />
     <Compile Include="Program.fs" />
     <Content Include="config_sample.json" CopyToOutputDirectory="Always" />
+    <Content Include="Create-Key.ps1" />
+    <Content Include="Octopus.ps1" />
+    <Content Include="start-octopus.sh" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FsUnit.xUnit" Version="4.2.0" />
