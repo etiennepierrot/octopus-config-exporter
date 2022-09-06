@@ -26,7 +26,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharp.Data" Version="4.2.7" />
-    <PackageReference Include="Octopus.Client" Version="11.6.3644" />
+    <PackageReference Include="Octopus.Client" Version="14.0.188" />
     <PackageReference Include="Argu" Version="6.1.1" />
     <PackageReference Include="DotNetConfig" Version="1.0.6" />
     <PackageReference Include="MinVer" Version="2.5.0">
